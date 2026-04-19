@@ -25,7 +25,7 @@ DB_NAME=telemedicina
 npm run dev
 8. Abrir en el navegador:
 http://localhost:3000
-⚠️ Notas
+Nota:
 Si algo falla, ejecutar otra vez: npm install
 Asegurarse que PostgreSQL esté activo
 Verificar que el .env esté bien configurado
