@@ -1,11 +1,11 @@
 # telemedicina-scrum
 # Proyecto Telemedicina - Sprint 1
-## 🔧 Requisitos
+## Requisitos
 Antes de ejecutar el proyecto debes tener instalado:
 - Node.js
 - PostgreSQL
 ---
-## 🚀 Cómo ejecutar el proyecto
+## Cómo ejecutar el proyecto
 1. Descargar o abrir la carpeta del proyecto
 2. Abrir la terminal dentro de la carpeta
 3. Instalar dependencias:
