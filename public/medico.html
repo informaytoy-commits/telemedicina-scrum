@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Médico - Telemedicina</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-content">
+            <h1>Portal del Médico</h1>
+            <div class="user-controls">
+                <button id="btnLogout" class="btn btn-secondary">Cerrar Sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <!-- SECCIÓN DE DISPONIBILIDAD -->
+        <section class="admin-section" style="margin-bottom: 2rem;">
+            <div class="search-header">
+                <h2>Mi Disponibilidad Registrada</h2>
+                <p>Define los días y rangos horarios en los que atenderás citas de telemedicina.</p>
+            </div>
+            
+            <div style="background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.5rem; max-width: 800px">
+                <h3 style="margin-top:0; font-size: 1rem; color: var(--text-main);">Agregar Nuevo Horario</h3>
+                <form id="formDisponibilidad" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; align-items: end;">
+                    <div class="input-group" style="margin: 0">
+                        <label for="dispDia" style="font-size: 0.8rem">Día de la semana</label>
+                        <select id="dispDia" required class="input-wrapper" style="box-sizing: border-box; width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem; background: var(--surface)">
+                            <option value="">Seleccionar...</option>
+                            <option value="Lunes">Lunes</option><option value="Martes">Martes</option>
+                            <option value="Miércoles">Miércoles</option><option value="Jueves">Jueves</option>
+                            <option value="Viernes">Viernes</option><option value="Sábado">Sábado</option>
+                            <option value="Domingo">Domingo</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="margin: 0">
+                        <label for="dispHoraInicio" style="font-size: 0.8rem">Hora Inicio</label>
+                        <input type="time" id="dispHoraInicio" required class="input-wrapper" style="box-sizing: border-box; width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                    </div>
+                    <div class="input-group" style="margin: 0">
+                        <label for="dispHoraFin" style="font-size: 0.8rem">Hora Fin</label>
+                        <input type="time" id="dispHoraFin" required class="input-wrapper" style="box-sizing: border-box; width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="height: 38px">Guardar Horario</button>
+                </form>
+            </div>
+
+            <div id="disponibilidadLoading" class="state-container hidden">
+                <span class="spinner"></span><p>Cargando horarios...</p>
+            </div>
+            <div id="disponibilidadEmpty" class="empty-state hidden" style="padding: 2rem;">
+                <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <div class="empty-title">Sin horarios configurados</div>
+                <p style="margin: 0; font-size: 0.9rem">Utiliza el formulario de arriba para agregar tus horarios de atención.</p>
+            </div>
+            
+            <div class="logs-container">
+                <table class="logs-table" id="disponibilidadTable" style="display: none;">
+                    <thead>
+                        <tr><th>Día</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>-</th></tr>
+                    </thead>
+                    <tbody id="disponibilidadList"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECCIÓN DE TURNOS -->
+        <section class="turnos-section">
+            <div class="search-header">
+                <h2>Mis Turnos Programados</h2>
+                <p>Visualiza y gestiona las reservas de tus pacientes.</p>
+            </div>
+            
+            <div id="turnosLoading" class="state-container hidden">
+                <span class="spinner"></span>
+                <p>Cargando turnos agendados...</p>
+            </div>
+            
+            <div id="turnosEmpty" class="empty-state hidden" style="padding: 2rem;">
+                <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <div class="empty-title">Agenda libre</div>
+                <p style="margin: 0; font-size: 0.9rem">Cuando un paciente reserve, aparecerá aquí.</p>
+            </div>
+            
+            <div id="turnosList" class="medicos-grid hidden">
+                <!-- Tarjetas creadas dinámicamente -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="/app.js"></script>
+    <script src="/medico.js"></script>
+</body>
+</html>

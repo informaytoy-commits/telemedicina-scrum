@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administrador - Telemedicina</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-content">
+            <h1>Panel de Administrador</h1>
+            <div class="user-controls">
+                <span id="userNameDisplay" class="user-name">Administrador</span>
+                <button id="btnLogout" class="btn btn-secondary">Cerrar Sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-content admin-dashboard">
+        <!-- Tarjetas Resumen -->
+        <section class="admin-stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Usuarios Totales</div>
+                <div class="stat-value" id="stat-usuarios">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Pacientes</div>
+                <div class="stat-value" id="stat-pacientes">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Médicos Activos</div>
+                <div class="stat-value" id="stat-medicos-activos">-</div>
+            </div>
+            <div class="stat-card highlight-danger">
+                <div class="stat-title">Médicos Pendientes</div>
+                <div class="stat-value" id="stat-pendientes">-</div>
+            </div>
+            <div class="stat-card highlight-warning">
+                <div class="stat-title">Documentos Pendientes</div>
+                <div class="stat-value" id="stat-documentos">-</div>
+            </div>
+        </section>
+
+        <!-- Médicos Pendientes -->
+        <section class="admin-section">
+            <h2 class="section-title">Médicos Pendientes de Validación</h2>
+            <div id="medicosList" class="medicos-grid">
+                <!-- Data inyectada dinámicamente -->
+                <div class="empty-state" style="grid-column: 1 / -1; width: 100%;">
+                    <span class="spinner" style="margin-bottom: 1rem;"></span>
+                    <div class="empty-title">Cargando médicos...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Logs del Sistema -->
+        <section class="admin-section">
+            <h2 class="section-title">Registro de Accesos y Auditoría</h2>
+            <div class="logs-container">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Acción</th>
+                            <th>Usuario (Rol)</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody">
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state" style="border: none; padding: 2rem;">
+                                    <span class="spinner" style="margin-bottom: 1rem;"></span>
+                                    <div class="empty-title">Consultando registros...</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <script src="/app.js"></script>
+    <script src="/admin.js"></script>
+</body>
+</html>
