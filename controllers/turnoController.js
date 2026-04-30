@@ -149,6 +149,26 @@ exports.listarTurnosMedico = async (req, res) => {
   }
 };
 
+exports.listarTurnosPorMedico = async (req, res) => {
+  try {
+    const { medicoId } = req.params;
+    const turnos = await Turno.findAll({
+      where: { medicoId },
+      include: [
+        { model: User, as: 'paciente', attributes: ['id', 'nombre', 'email', 'foto'] }
+      ],
+      order: [['fecha_reserva', 'ASC'], ['hora_inicio', 'ASC']]
+    });
+
+    res.status(200).json({
+      turnos
+    });
+  } catch (error) {
+    console.error('Error al listar turnos por médico:', error);
+    res.status(500).json({ error: 'Error del servidor al obtener el listado.' });
+  }
+};
+
 exports.cancelarTurno = async (req, res) => {
   try {
     const usuarioId = req.user.id;

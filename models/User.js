@@ -35,6 +35,14 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  direccion: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  turno_trabajo: {
+    type: DataTypes.ENUM('Mañana', 'Tarde', 'Completo'),
+    allowNull: true
+  },
   especialidad: {
     type: DataTypes.STRING,
     allowNull: true
@@ -44,7 +52,7 @@ const User = sequelize.define('User', {
     allowNull: true
   },
   rol: {
-    type: DataTypes.ENUM('admin', 'medico', 'paciente'),
+    type: DataTypes.ENUM('admin', 'medico', 'paciente', 'recepcionista'),
     allowNull: false,
     defaultValue: 'paciente'
   },

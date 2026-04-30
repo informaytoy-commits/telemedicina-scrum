@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { User, Disponibilidad, Turno } = require('../models');
+const { User, Disponibilidad, Turno, sequelize } = require('../models');
 
 const buscarMedicos = async (req, res) => {
   try {
@@ -51,6 +51,32 @@ const buscarMedicos = async (req, res) => {
   }
 };
 
+const obtenerEspecialidades = async (req, res) => {
+  try {
+    const especialidades = await User.findAll({
+      attributes: [[sequelize.fn('DISTINCT', sequelize.col('especialidad')), 'especialidad']],
+      where: {
+        rol: 'medico',
+        especialidad: {
+          [Op.ne]: null,
+          [Op.not]: ''
+        }
+      },
+      raw: true
+    });
+
+    const lista = especialidades.map(e => e.especialidad).filter(Boolean);
+
+    return res.status(200).json({
+      especialidades: lista
+    });
+  } catch (error) {
+    console.error('Error en obtenerEspecialidades:', error);
+    return res.status(500).json({ error: 'Error interno al obtener especialidades.' });
+  }
+};
+
 module.exports = {
-  buscarMedicos
+  buscarMedicos,
+  obtenerEspecialidades
 };

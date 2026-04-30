@@ -85,7 +85,9 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    const email = req.body.email ? req.body.email.trim() : '';
+    console.log(`[DEBUG LOGIN] Intento de login con correo: ${email}`);
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email y password son obligatorios' });
@@ -94,11 +96,15 @@ const login = async (req, res) => {
     // Buscar si existe el usuario
     const user = await User.findOne({ where: { email } });
     if (!user) {
+      console.log(`[DEBUG LOGIN] Usuario no encontrado para el correo: ${email}`);
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
+    console.log(`[DEBUG LOGIN] Usuario encontrado. Rol: ${user.rol}, Estado: ${user.estado}`);
+
     // Verificar si el usuario está activo
     if (user.estado !== 'activo') {
+      console.log(`[DEBUG LOGIN] Bloqueo: el usuario no está activo. Estado actual: ${user.estado}`);
       if (user.rol === 'medico') {
         if (user.estado === 'pendiente') {
           return res.status(403).json({ error: 'Tu cuenta médica aún no ha sido validada por el administrador.' });

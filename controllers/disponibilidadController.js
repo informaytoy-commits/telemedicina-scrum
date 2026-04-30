@@ -1,4 +1,4 @@
-const { Disponibilidad } = require('../models');
+const { Disponibilidad, User, AuditLog } = require('../models');
 const { Op } = require('sequelize');
 
 // Helper para validar si los horarios se solapan
@@ -23,11 +23,18 @@ const verificarSolapamiento = async (userId, dia_semana, hora_inicio, hora_fin, 
 // Crear nueva disponibilidad
 const crearDisponibilidad = async (req, res) => {
   try {
-    const { dia_semana, hora_inicio, hora_fin, estado } = req.body;
-    const userId = req.user.id;
+    const { dia_semana, hora_inicio, hora_fin, estado, medicoId } = req.body;
+    
+    // Solo recepcionista puede crear, así que el medicoId viene en el body
+    const userId = medicoId; 
 
-    if (!dia_semana || !hora_inicio || !hora_fin) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios (dia_semana, hora_inicio, hora_fin).' });
+    if (!userId || !dia_semana || !hora_inicio || !hora_fin) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios (medicoId, dia_semana, hora_inicio, hora_fin).' });
+    }
+
+    const medico = await User.findOne({ where: { id: userId, rol: 'medico', estado: 'activo' } });
+    if (!medico) {
+      return res.status(400).json({ error: 'Médico no válido o inactivo.' });
     }
 
     if (hora_inicio >= hora_fin) {
@@ -36,7 +43,7 @@ const crearDisponibilidad = async (req, res) => {
 
     const solapamiento = await verificarSolapamiento(userId, dia_semana, hora_inicio, hora_fin);
     if (solapamiento) {
-      return res.status(400).json({ error: 'Ya tienes un horario que se solapa con este intervalo.' });
+      return res.status(400).json({ error: 'El médico ya tiene un horario que se solapa con este intervalo.' });
     }
 
     const nuevaDisp = await Disponibilidad.create({
@@ -46,6 +53,17 @@ const crearDisponibilidad = async (req, res) => {
       hora_fin,
       estado: estado || 'Disponible'
     });
+
+    if (AuditLog) {
+       await AuditLog.create({
+          userId: req.user.id,
+          nombre: req.user.nombre || 'Recepcionista',
+          email: req.user.email,
+          rol: req.user.rol,
+          accion: 'Crear Disponibilidad',
+          detalle: `Asignó disponibilidad al médico ID ${userId} el día ${dia_semana}`
+       });
+    }
 
     res.status(201).json({ message: 'Disponibilidad creada correctamente.', disponibilidad: nuevaDisp });
   } catch (error) {
@@ -68,22 +86,35 @@ const listarMisDisponibilidades = async (req, res) => {
   }
 };
 
+const listarDisponibilidadPorMedico = async (req, res) => {
+  try {
+    const { medicoId } = req.params;
+    const disponibilidades = await Disponibilidad.findAll({
+      where: { userId: medicoId },
+      order: [['dia_semana', 'ASC'], ['hora_inicio', 'ASC']]
+    });
+
+    res.json(disponibilidades);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al listar las disponibilidades.', detalle: error.message });
+  }
+};
+
 // Editar disponibilidad existente
 const editarDisponibilidad = async (req, res) => {
   try {
     const { id } = req.params;
     const { dia_semana, hora_inicio, hora_fin, estado } = req.body;
-    const userId = req.user.id;
+    
+    // Solo recepcionista edita
 
     const disponibilidad = await Disponibilidad.findByPk(id);
     
     if (!disponibilidad) {
       return res.status(404).json({ error: 'Disponibilidad no encontrada.' });
     }
-
-    if (disponibilidad.userId !== userId) {
-      return res.status(403).json({ error: 'No tienes permisos para editar este horario.' });
-    }
+    
+    const userId = disponibilidad.userId;
 
     // Permite actualizaciones parciales
     const n_dia = dia_semana || disponibilidad.dia_semana;
@@ -117,7 +148,6 @@ const editarDisponibilidad = async (req, res) => {
 const eliminarDisponibilidad = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
 
     const disponibilidad = await Disponibilidad.findByPk(id);
     
@@ -125,11 +155,18 @@ const eliminarDisponibilidad = async (req, res) => {
       return res.status(404).json({ error: 'Disponibilidad no encontrada.' });
     }
 
-    if (disponibilidad.userId !== userId) {
-      return res.status(403).json({ error: 'No tienes permisos para eliminar este horario.' });
-    }
-
     await disponibilidad.destroy();
+
+    if (AuditLog) {
+       await AuditLog.create({
+          userId: req.user.id,
+          nombre: req.user.nombre || 'Recepcionista',
+          email: req.user.email,
+          rol: req.user.rol,
+          accion: 'Eliminar Disponibilidad',
+          detalle: `Eliminó disponibilidad ID ${id} del médico ID ${disponibilidad.userId}`
+       });
+    }
 
     res.json({ message: 'Disponibilidad eliminada correctamente.' });
   } catch (error) {
@@ -140,6 +177,7 @@ const eliminarDisponibilidad = async (req, res) => {
 module.exports = {
   crearDisponibilidad,
   listarMisDisponibilidades,
+  listarDisponibilidadPorMedico,
   editarDisponibilidad,
   eliminarDisponibilidad
 };
