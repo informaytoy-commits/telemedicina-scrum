@@ -19,44 +19,226 @@
     </header>
 
     <main class="page-content admin-dashboard">
-        <!-- Tarjetas Resumen -->
+        <!-- Navegación por Tarjetas (Tabs) -->
         <section class="admin-stats-grid">
-            <div class="stat-card">
+            <div class="stat-card tab-btn active" data-target="module-usuarios" style="cursor: pointer; border-bottom: 4px solid var(--primary);">
                 <div class="stat-title">Usuarios Totales</div>
                 <div class="stat-value" id="stat-usuarios">-</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card tab-btn" data-target="module-pacientes" style="cursor: pointer;">
                 <div class="stat-title">Pacientes</div>
                 <div class="stat-value" id="stat-pacientes">-</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-title">Médicos Activos</div>
+            <div class="stat-card tab-btn" data-target="module-medicos" style="cursor: pointer;">
+                <div class="stat-title">Médicos</div>
                 <div class="stat-value" id="stat-medicos-activos">-</div>
             </div>
-            <div class="stat-card highlight-danger">
-                <div class="stat-title">Médicos Pendientes</div>
-                <div class="stat-value" id="stat-pendientes">-</div>
+            <div class="stat-card tab-btn" data-target="module-recepcionistas" style="cursor: pointer;">
+                <div class="stat-title">Recepcionistas</div>
+                <div class="stat-value" id="stat-recepcionistas">-</div>
             </div>
-            <div class="stat-card highlight-warning">
-                <div class="stat-title">Documentos Pendientes</div>
-                <div class="stat-value" id="stat-documentos">-</div>
+            <div class="stat-card tab-btn" data-target="module-turnos" style="cursor: pointer;">
+                <div class="stat-title">Turnos Registrados</div>
+                <div class="stat-value" id="stat-turnos">-</div>
+            </div>
+            <div class="stat-card tab-btn" data-target="module-especialidades" style="cursor: pointer;">
+                <div class="stat-title">Especialidades</div>
+                <div class="stat-value" id="stat-especialidades">-</div>
+            </div>
+            <div class="stat-card tab-btn" data-target="module-logs" style="cursor: pointer;">
+                <div class="stat-title">Auditoría</div>
+                <div class="stat-value" id="stat-logs" style="font-size: 1.5rem; line-height: 2.25rem;">Ver Logs</div>
+            </div>
+            <div class="stat-card tab-btn" data-target="module-reportes" style="cursor: pointer; background: rgba(59, 130, 246, 0.05); border-color: var(--primary);">
+                <div class="stat-title" style="color: var(--primary);">Reporte de Consultas</div>
+                <div class="stat-value" style="font-size: 1.5rem; line-height: 2.25rem; color: var(--primary);">Ver Reportes</div>
+            </div>
+            <div class="stat-card tab-btn" data-target="module-alertas" style="cursor: pointer; background: rgba(239, 68, 68, 0.05); border-color: var(--error);">
+                <div class="stat-title" style="color: var(--error);">Alertas Pendientes</div>
+                <div class="stat-value" id="stat-alertas" style="font-size: 1.5rem; line-height: 2.25rem; color: var(--error);">0</div>
             </div>
         </section>
 
-        <!-- Médicos Pendientes -->
-        <section class="admin-section">
-            <h2 class="section-title">Médicos Pendientes de Validación</h2>
-            <div id="medicosList" class="medicos-grid">
-                <!-- Data inyectada dinámicamente -->
+        <!-- MÓDULO: USUARIOS TOTALES -->
+        <section id="module-usuarios" class="admin-section admin-module">
+            <h2 class="section-title">Todos los Usuarios</h2>
+            <div class="table-responsive">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usuariosTableBody">
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state" style="border: none; padding: 2rem;">
+                                    <span class="spinner" style="margin-bottom: 1rem;"></span>
+                                    <div class="empty-title">Cargando usuarios...</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- MÓDULO: PACIENTES -->
+        <section id="module-pacientes" class="admin-section admin-module hidden">
+            <h2 class="section-title">Pacientes Registrados</h2>
+            <div class="table-responsive">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Teléfono</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pacientesTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- MÓDULO: MÉDICOS -->
+        <section id="module-medicos" class="admin-section admin-module hidden">
+            <h2 class="section-title">Gestión de Médicos</h2>
+            
+            <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Médicos Pendientes de Validación</h3>
+            <div id="medicosList" class="medicos-grid" style="margin-bottom: 2rem;">
                 <div class="empty-state" style="grid-column: 1 / -1; width: 100%;">
                     <span class="spinner" style="margin-bottom: 1rem;"></span>
                     <div class="empty-title">Cargando médicos...</div>
                 </div>
             </div>
+
+            <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Directorio de Médicos</h3>
+            <div class="table-responsive">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Especialidad</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="medicosTableBody">
+                    </tbody>
+                </table>
+            </div>
         </section>
 
-        <!-- Logs del Sistema -->
-        <section class="admin-section">
+        <!-- MÓDULO: RECEPCIONISTAS -->
+        <section id="module-recepcionistas" class="admin-section admin-module hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 class="section-title" style="margin-bottom: 0.25rem;">Gestión de Recepcionistas</h2>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">Administra el personal encargado de organizar la disponibilidad médica.</p>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <div class="input-wrapper" style="min-width: 250px;">
+                        <input type="text" id="buscadorRecepcionistas" placeholder="Buscar por nombre, correo o CI..." style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                    </div>
+                    <button id="btnAbrirModalRecepcionista" class="btn btn-primary">Registrar Recepcionista</button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Nombre</th>
+                            <th>Correo / Teléfono</th>
+                            <th>CI</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recepcionistasTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- MÓDULO: TURNOS REGISTRADOS -->
+        <section id="module-turnos" class="admin-section admin-module hidden">
+            <h2 class="section-title">Turnos del Sistema</h2>
+            <div class="table-responsive">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Horario</th>
+                            <th>Médico</th>
+                            <th>Paciente</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="turnosTableBody">
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state" style="border: none; padding: 2rem;">
+                                    <span class="spinner" style="margin-bottom: 1rem;"></span>
+                                    <div class="empty-title">Cargando turnos...</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- MÓDULO: ESPECIALIDADES -->
+        <section id="module-especialidades" class="admin-section admin-module hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 class="section-title" style="margin-bottom: 0.25rem;">Gestión de Especialidades</h2>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">Administra las especialidades médicas disponibles en el sistema.</p>
+                </div>
+                <div>
+                    <button id="btnAbrirModalEspecialidad" class="btn btn-primary">Nueva Especialidad</button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="especialidadesTableBody">
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state" style="border: none; padding: 2rem;">
+                                    <span class="spinner" style="margin-bottom: 1rem;"></span>
+                                    <div class="empty-title">Cargando especialidades...</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- MÓDULO: AUDITORÍA -->
+        <section id="module-logs" class="admin-section admin-module hidden">
             <h2 class="section-title">Registro de Accesos y Auditoría</h2>
             <div class="logs-container">
                 <table class="logs-table">
@@ -82,7 +264,316 @@
             </div>
         </section>
 
+        <!-- MÓDULO: REPORTE DE CONSULTAS -->
+        <section id="module-reportes" class="admin-section admin-module hidden">
+            <h2 class="section-title">Reporte de Consultas y Recaudación</h2>
+            
+            <div class="search-header" style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2rem; border: 1px solid var(--border);">
+                <form id="formFiltroReportes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="form-group">
+                        <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">Desde</label>
+                        <input type="date" id="filtroDesde" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">Hasta</label>
+                        <input type="date" id="filtroHasta" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">Médico</label>
+                        <select id="filtroMedico" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                            <option value="">Todos los médicos</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">Especialidad</label>
+                        <select id="filtroEspecialidad" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                            <option value="">Todas las especialidades</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%; height: 38px;">Generar Reporte</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="stats-grid" style="margin-bottom: 2rem;">
+                <div class="stat-card" style="background: white;">
+                    <div class="stat-title">Total Turnos Registrados</div>
+                    <div class="stat-value" id="repTotalTurnos">-</div>
+                </div>
+                <div class="stat-card" style="background: white;">
+                    <div class="stat-title" style="color: var(--primary);">Turnos Reservados</div>
+                    <div class="stat-value" id="repTotalReservados" style="color: var(--primary);">-</div>
+                </div>
+                <div class="stat-card" style="background: white;">
+                    <div class="stat-title" style="color: var(--error);">Turnos Cancelados</div>
+                    <div class="stat-value" id="repTotalCancelados" style="color: var(--error);">-</div>
+                </div>
+                <div class="stat-card" style="background: white;">
+                    <div class="stat-title" style="color: #10b981;">Consultas Atendidas</div>
+                    <div class="stat-value" id="repTotalAtendidos" style="color: #10b981;">-</div>
+                </div>
+            </div>
+
+            <div class="stats-grid" style="margin-bottom: 2rem;">
+                <div class="stat-card" style="background: white;">
+                    <div class="stat-title">Recetas Generadas</div>
+                    <div class="stat-value" id="repTotalRecetas">-</div>
+                </div>
+                <div class="stat-card" style="background: white;">
+                    <div class="stat-title">Notas Clínicas Generadas</div>
+                    <div class="stat-value" id="repTotalNotas">-</div>
+                </div>
+                <div class="stat-card" style="background: rgba(16, 185, 129, 0.1); border-color: #10b981;">
+                    <div class="stat-title" style="color: #059669;">Total Recaudado</div>
+                    <div class="stat-value" id="repTotalRecaudado" style="color: #059669; font-size: 2rem;">Bs. 0.00</div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 1rem;">Detalle de Turnos en Reporte</h3>
+            <div class="table-responsive">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha y Hora</th>
+                            <th>Paciente</th>
+                            <th>Médico / Especialidad</th>
+                            <th>Estado</th>
+                            <th>Pago</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportesTableBody">
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state" style="border: none; padding: 2rem;">
+                                    <div class="empty-title">Configura los filtros y presiona "Generar Reporte"</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- MÓDULO: ALERTAS DE EMERGENCIA -->
+        <section id="module-alertas" class="admin-section admin-module hidden">
+            <h2 class="section-title" style="color: var(--error);">Alertas de Emergencia</h2>
+            <div class="table-responsive">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Paciente</th>
+                            <th>Nivel</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertasAdminTableBody">
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state" style="border: none; padding: 2rem;">
+                                    <span class="spinner" style="margin-bottom: 1rem;"></span>
+                                    <div class="empty-title">Cargando alertas...</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
     </main>
+
+    <!-- Modal Agregar/Editar Usuario Genérico -->
+    <div id="modalUsuario" class="modal-overlay hidden">
+        <div class="modal-container" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 id="modalUsuarioTitle">Registrar Usuario</h3>
+                <button class="close-btn" id="btnCerrarModalUsuario">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <form id="formCrearUsuario" class="modal-form">
+                <input type="hidden" id="usr_id">
+                <input type="hidden" id="usr_rol_oculto" value="recepcionista">
+                
+                <div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
+                    <div style="position: relative; width: 100px; height: 100px;">
+                        <img id="usr_foto_preview" src="" alt="Preview" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; background-color: var(--primary-light); display: none;">
+                        <div id="usr_foto_placeholder" style="width: 100px; height: 100px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold;">?</div>
+                        <input type="file" id="usr_foto" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Nombre Completo *</label>
+                        <input type="text" id="usr_nombre" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Documento de Identidad (CI) *</label>
+                        <input type="text" id="usr_ci" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Correo Electrónico *</label>
+                        <input type="email" id="usr_email" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Teléfono *</label>
+                        <input type="text" id="usr_telefono" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;" required>
+                    </div>
+                </div>
+
+                <div class="form-row" id="pwd_row">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Contraseña *</label>
+                        <input type="password" id="usr_password" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Confirmar Contraseña *</label>
+                        <input type="password" id="usr_password_confirm" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Dirección</label>
+                        <input type="text" id="usr_direccion" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;" id="turno_group">
+                        <label>Turno de Trabajo</label>
+                        <select id="usr_turno" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                            <option value="">Seleccione...</option>
+                            <option value="Mañana">Mañana</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Completo">Completo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row" id="medico_group" style="display: none;">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Especialidad</label>
+                        <input type="text" id="usr_especialidad" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Matrícula Profesional</label>
+                        <input type="text" id="usr_matricula" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem; display: none;" id="status_group">
+                    <label>Estado</label>
+                    <select id="usr_estado" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;">
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                        <option value="pendiente">Pendiente</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="btnCancelarUsuario">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitUsuario">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Detalle Usuario -->
+    <div id="modalDetalleUsuario" class="modal-overlay hidden">
+        <div class="modal-container" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>Detalle de Usuario</h3>
+                <button class="close-btn" id="btnCerrarModalDetalle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-form" style="display: flex; flex-direction: column; align-items: center; padding-top: 2rem;">
+                <div id="det_foto_container" style="margin-bottom: 1.5rem;"></div>
+                <h2 id="det_nombre" style="margin-bottom: 0.25rem;">-</h2>
+                <div id="det_estado_container" style="margin-bottom: 1.5rem;"></div>
+                
+                <div style="width: 100%; text-align: left; font-size: 0.9rem;">
+                    <p style="margin-bottom: 0.5rem;"><strong>Rol:</strong> <span id="det_rol" style="text-transform: capitalize;"></span></p>
+                    <p style="margin-bottom: 0.5rem;"><strong>Correo:</strong> <span id="det_email"></span></p>
+                    <p style="margin-bottom: 0.5rem;"><strong>Teléfono:</strong> <span id="det_telefono"></span></p>
+                    <p style="margin-bottom: 0.5rem;"><strong>Cédula (CI):</strong> <span id="det_ci"></span></p>
+                    <p style="margin-bottom: 0.5rem;"><strong>Dirección:</strong> <span id="det_direccion"></span></p>
+                    <div id="det_turno_group" style="display: none;">
+                        <p style="margin-bottom: 0.5rem;"><strong>Turno:</strong> <span id="det_turno"></span></p>
+                    </div>
+                    <div id="det_medico_group" style="display: none;">
+                        <p style="margin-bottom: 0.5rem;"><strong>Especialidad:</strong> <span id="det_especialidad"></span></p>
+                        <p style="margin-bottom: 0.5rem;"><strong>Matrícula Profesional:</strong> <span id="det_matricula"></span></p>
+                    </div>
+                    <p style="margin-bottom: 0.5rem;"><strong>Fecha Registro:</strong> <span id="det_fecha"></span></p>
+                </div>
+
+                <div class="modal-actions" style="width: 100%;">
+                    <button type="button" class="btn btn-secondary" id="btnCerrarDetalleBtn" style="width: 100%;">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Resetear Contraseña -->
+    <div id="modalResetPassword" class="modal-overlay hidden">
+        <div class="modal-container" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Resetear Contraseña</h3>
+                <button class="close-btn" id="btnCerrarModalReset">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <form id="formResetPassword" class="modal-form">
+                <input type="hidden" id="reset_usr_id">
+                <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">Ingrese la nueva contraseña segura para el usuario seleccionado. No se mostrará ni enviará en texto plano.</p>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Nueva Contraseña *</label>
+                    <input type="password" id="reset_password" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Confirmar Nueva Contraseña *</label>
+                    <input type="password" id="reset_password_confirm" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="btnCancelarReset">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Resetear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Agregar/Editar Especialidad -->
+    <div id="modalEspecialidad" class="modal-overlay hidden">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 id="modalEspecialidadTitle">Nueva Especialidad</h3>
+                <button class="close-btn" id="btnCerrarModalEspecialidad">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <form id="formEspecialidad" class="modal-form">
+                <input type="hidden" id="esp_id">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Nombre *</label>
+                    <input type="text" id="esp_nombre" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Descripción</label>
+                    <textarea id="esp_descripcion" class="input-wrapper" rows="3" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="btnCancelarEspecialidad">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitEspecialidad">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Toast Notifications -->
     <div id="toastContainer" class="toast-container"></div>

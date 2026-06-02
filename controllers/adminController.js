@@ -1,4 +1,4 @@
-const { User, MedicoDocumento, AuditLog, Turno } = require('../models');
+const { User, MedicoDocumento, AuditLog, Turno, Disponibilidad } = require('../models');
 const bcrypt = require('bcrypt');
 
 const getResumenAdmin = async (req, res) => {
@@ -141,18 +141,24 @@ const getUsuarios = async (req, res) => {
     res.status(500).json({ error: 'Error del servidor al obtener usuarios.' });
   }
 };
-
 const crearRecepcionista = async (req, res) => {
   try {
     const { nombre, password, telefono, ci, direccion, turno_trabajo } = req.body;
-    const email = req.body.email ? req.body.email.trim() : '';
+    const email = req.body.email ? req.body.email.trim().toLowerCase() : '';
     let foto = req.file ? req.file.filename : null;
 
     if (!nombre || !email || !password) {
       return res.status(400).json({ error: 'Nombre, email y contraseña son obligatorios.' });
     }
 
-    const userExists = await User.findOne({ where: { email } });
+    const sequelize = require('../config/database');
+    const userExists = await User.findOne({
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('email')),
+        email.toLowerCase()
+      )
+    });
+
     if (userExists) {
       return res.status(400).json({ error: 'El email ya se encuentra registrado.' });
     }
@@ -237,7 +243,24 @@ const eliminarUsuario = async (req, res) => {
       return res.status(404).json({ error: 'Usuario no encontrado.' });
     }
 
+    if (usuario.rol === 'admin') {
+      return res.status(403).json({ error: 'No está permitido eliminar a un administrador.' });
+    }
+
     const emailTemp = usuario.email;
+
+    // Verificar explícitamente si tiene turnos asociados
+    const turnosComoMedico = await Turno.count({ where: { medicoId: id } });
+    const turnosComoPaciente = await Turno.count({ where: { pacienteId: id } });
+
+    if (turnosComoMedico > 0 || turnosComoPaciente > 0) {
+      return res.status(400).json({ error: 'No se puede eliminar porque tiene registros asociados. Puedes desactivarlo.' });
+    }
+
+    // Intentar manejar relaciones seguras
+    await MedicoDocumento.destroy({ where: { userId: id } });
+    await Disponibilidad.destroy({ where: { userId: id } });
+    await AuditLog.destroy({ where: { userId: id } });
 
     await usuario.destroy();
 
@@ -247,12 +270,12 @@ const eliminarUsuario = async (req, res) => {
       email: req.user.email,
       rol: 'admin',
       accion: 'Eliminar Usuario',
-      detalle: `Admin eliminó al usuario ID ${id} (${emailTemp})`
+      detalle: `Admin eliminó permanentemente al usuario ID ${id} (${emailTemp})`
     });
 
     res.status(200).json({ message: 'Usuario eliminado exitosamente' });
   } catch (error) {
-    console.error('Error al eliminar usuario:', error);
+    console.error('Error REAL al eliminar usuario:', error);
     res.status(500).json({ error: 'Error del servidor al eliminar usuario.' });
   }
 };
@@ -307,6 +330,76 @@ const getTurnos = async (req, res) => {
   }
 };
 
+const getReportes = async (req, res) => {
+  try {
+    const { fecha_desde, fecha_hasta, medicoId, especialidadId } = req.query;
+
+    const { Turno, NotaClinica, Receta, Pago, User } = require('../models');
+    const { Op } = require('sequelize');
+
+    const turnoWhere = {};
+    if (fecha_desde && fecha_hasta) {
+      turnoWhere.fecha_reserva = { [Op.between]: [fecha_desde, fecha_hasta] };
+    } else if (fecha_desde) {
+      turnoWhere.fecha_reserva = { [Op.gte]: fecha_desde };
+    } else if (fecha_hasta) {
+      turnoWhere.fecha_reserva = { [Op.lte]: fecha_hasta };
+    }
+
+    if (medicoId) {
+      turnoWhere.medicoId = medicoId;
+    }
+
+    const turnos = await Turno.findAll({
+      where: turnoWhere,
+      include: [
+        { 
+          model: User, 
+          as: 'medico', 
+          attributes: ['id', 'nombre'], 
+          ...(especialidadId && { where: { especialidadId } }) 
+        },
+        { model: User, as: 'paciente', attributes: ['id', 'nombre'] },
+        { model: Pago, as: 'pago' },
+        { model: NotaClinica, as: 'notaClinica' },
+        { model: Receta, as: 'receta' }
+      ]
+    });
+
+    const totalTurnos = turnos.length;
+    const totalReservados = turnos.filter(t => ['Reservado', 'Confirmado'].includes(t.estado)).length;
+    const totalCancelados = turnos.filter(t => t.estado === 'Cancelado').length;
+    const totalAtendidos = turnos.filter(t => t.estado === 'Activo').length; // O completado
+    
+    let totalRecetas = 0;
+    let totalNotas = 0;
+    let totalRecaudado = 0;
+
+    turnos.forEach(t => {
+      if (t.receta) totalRecetas++;
+      if (t.notaClinica) totalNotas++;
+      if (t.pago && t.pago.estado === 'pagado') totalRecaudado += parseFloat(t.pago.monto);
+    });
+
+    res.status(200).json({
+      totales: {
+        totalTurnos,
+        totalReservados,
+        totalCancelados,
+        totalAtendidos,
+        totalRecetas,
+        totalNotas,
+        totalRecaudado
+      },
+      turnos
+    });
+
+  } catch (error) {
+    console.error('Error al generar reportes:', error);
+    res.status(500).json({ error: 'Error del servidor al generar reportes.' });
+  }
+};
+
 module.exports = {
   getResumenAdmin,
   getMedicosPendientes,
@@ -318,5 +411,6 @@ module.exports = {
   actualizarUsuario,
   eliminarUsuario,
   getTurnos,
-  resetPassword
+  resetPassword,
+  getReportes
 };

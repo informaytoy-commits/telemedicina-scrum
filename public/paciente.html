@@ -11,7 +11,22 @@
     <header class="page-header">
         <div class="header-content">
             <h1>Portal del Paciente</h1>
-            <div class="user-controls">
+            <div class="user-controls" style="display: flex; align-items: center; gap: 1rem;">
+                <div class="notifications-wrapper" style="position: relative;">
+                    <button id="btnNotificaciones" class="btn btn-secondary" style="padding: 0.5rem; position: relative;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span id="notifBadge" class="badge hidden" style="position: absolute; top: -5px; right: -5px; background: var(--error); color: white; font-size: 0.7rem; padding: 0.15rem 0.3rem; border-radius: 50%;">0</span>
+                    </button>
+                    <div id="notifDropdown" class="dropdown-menu hidden" style="position: absolute; right: 0; top: 100%; margin-top: 0.5rem; width: 320px; background: white; border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 1000; max-height: 400px; overflow-y: auto;">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border); font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+                            Notificaciones
+                        </div>
+                        <div id="notifList" style="padding: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <!-- Notificaciones aquí -->
+                        </div>
+                    </div>
+                </div>
+                <button id="btnAlertaEmergencia" class="btn btn-primary" style="background: var(--error); border-color: var(--error);">¡Emergencia!</button>
                 <button id="btnLogout" class="btn btn-secondary">Cerrar Sesión</button>
             </div>
         </div>
@@ -24,12 +39,20 @@
                 <p>Encuentra a tu especialista por nombre y reserva un turno.</p>
             </div>
             
-            <form id="searchForm" class="search-form" style="display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: stretch;">
+            <form id="searchForm" class="search-form">
                 <div class="input-wrapper search-input-wrapper">
                     <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input type="text" id="searchInput" placeholder="Nombre o apellido del médico" autocomplete="off" style="width: 100%">
+                    <input type="text" id="searchInput" placeholder="Nombre o apellido del médico" autocomplete="off">
                 </div>
-                <button type="submit" id="searchButton" class="btn btn-primary search-btn" style="height: 100%; margin: 0">
+                <div class="input-wrapper select-wrapper">
+                    <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    <select id="specialtySelect" class="custom-select">
+                        <option value="">Todas las especialidades</option>
+                    </select>
+                    <!-- Custom chevron -->
+                    <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                <button type="submit" id="searchButton" class="btn btn-primary search-btn">
                     <span class="btn-text">Buscar</span>
                     <span class="btn-loader"></span>
                 </button>
@@ -84,6 +107,29 @@
                 <!-- Tarjetas creadas dinámicamente -->
             </div>
         </section>
+
+        <!-- Section: Historial Clínico -->
+        <hr style="border-top: 1px solid var(--border); margin: 3rem 0;">
+        <section class="historial-section" style="margin-bottom: 3rem;">
+            <div class="search-header">
+                <h2>Mi Historial Clínico</h2>
+                <p>Consultas pasadas, notas de los médicos y recetas generadas.</p>
+            </div>
+            
+            <div id="historialLoading" class="state-container hidden">
+                <span class="spinner"></span><p>Cargando historial...</p>
+            </div>
+            
+            <div id="historialEmpty" class="empty-state hidden" style="padding: 2rem;">
+                <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <div class="empty-title">Sin registros</div>
+                <p style="margin: 0; font-size: 0.9rem">Aún no tienes historial clínico.</p>
+            </div>
+            
+            <div id="historialList" style="display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Historial dinámico -->
+            </div>
+        </section>
     </main>
 
     <!-- Modal de Reserva -->
@@ -118,26 +164,30 @@
                 <input type="hidden" id="horaInicio" required>
                 <input type="hidden" id="horaFin" required>
                 
-                <div class="input-group" id="inicioGroup" style="margin-top: 1rem;">
-                    <label style="margin-bottom: 0.5rem; display: block;">Escoge tu Hora de Inicio</label>
-                    <div id="inicioContainer" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                        <span style="font-size: 0.85rem; color: var(--text-muted);">Selecciona una fecha para ver horarios válidos.</span>
+                <div class="input-group" id="horariosGroup" style="margin-top: 1rem;">
+                    <label style="margin-bottom: 0.5rem; display: block;">Horarios disponibles</label>
+                    <div id="horariosContainer" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Selecciona una fecha para ver los horarios.</span>
                     </div>
                 </div>
 
-                <div class="input-group" id="finGroup" style="margin-top: 1rem; display: none;">
-                    <label style="margin-bottom: 0.5rem; display: block;">Escoge la Duración (Hora Fin)</label>
-                    <div id="finContainer" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <!-- Sección de Pago Simulado (Sprint 3) -->
+                <div class="input-group" id="pagoSection" style="margin-top: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.05); border: 1px solid var(--border); border-radius: var(--radius-md); display: none;">
+                    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 600; color: var(--text-main);">Pago de Consulta</h4>
+                    <p style="margin: 0 0 1rem 0; font-size: 0.85rem; color: var(--text-muted);">Para confirmar tu reserva, debes realizar el pago correspondiente.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <span style="font-weight: 500; font-size: 0.9rem;">Monto a pagar:</span>
+                        <strong style="font-size: 1.1rem; color: var(--primary);">Bs. 50.00</strong>
                     </div>
                 </div>
 
                 <div id="reservaError" class="error-message"></div>
                 <div id="reservaSuccess" class="success-message hidden"></div>
 
-                <div class="modal-actions">
+                <div class="modal-actions" style="margin-top: 1.5rem;">
                     <button type="button" id="cancelReservaBtn" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" id="submitReservaBtn" class="btn btn-primary">
-                        <span class="btn-text">Confirmar Reserva</span>
+                    <button type="submit" id="submitReservaBtn" class="btn btn-primary" disabled>
+                        <span class="btn-text">Pagar y Confirmar</span>
                         <span class="btn-loader"></span>
                     </button>
                 </div>
@@ -145,8 +195,160 @@
         </div>
     </div>
 
+    <!-- Modal Detalle Clínico -->
+    <div id="modalDetalleClinico" class="modal-overlay hidden">
+        <div class="modal-container" style="max-width: 500px; padding: 1.5rem;">
+            <div class="modal-header" style="margin-bottom: 0.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+                <h3 id="detalleClinicoTitle" style="font-size: 1.1rem; font-weight: 600; color: var(--text-main); margin: 0;">Detalle Clínico</h3>
+                <button id="btnCerrarDetalle" class="close-btn" aria-label="Cerrar modal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div id="detalleClinicoContent" style="padding: 0.5rem 0; font-size: 0.95rem; line-height: 1.5; color: var(--text-main); max-height: 60vh; overflow-y: auto;">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-actions" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                <button type="button" id="btnAceptarDetalle" class="btn btn-primary" style="width: 100%; font-weight: 500;">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sala Virtual -->
+    <div id="modalSalaVirtual" class="modal-overlay hidden">
+        <div class="modal-container" style="max-width: 800px;">
+            <div class="modal-header" style="background: var(--bg-card); padding: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border);">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Sala Virtual</h3>
+                    <p id="salaInfo" style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);"></p>
+                </div>
+                <button class="close-btn" id="btnCerrarSala" style="color: var(--error);">
+                    Finalizar y Salir
+                </button>
+            </div>
+            <div style="background: #0f172a; height: 400px; position: relative; border-radius: 0 0 var(--radius-md) var(--radius-md); overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <div style="text-align: center; color: white;">
+                    <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                    </div>
+                    <p style="margin: 0;">Esperando al médico...</p>
+                </div>
+                <!-- Controles -->
+                <div style="position: absolute; bottom: 1.5rem; left: 50%; transform: translateX(-50%); display: flex; gap: 1rem; background: rgba(0,0,0,0.5); padding: 0.5rem 1rem; border-radius: 2rem;">
+                    <button class="btn" style="border-radius: 50%; width: 45px; height: 45px; padding: 0; background: rgba(255,255,255,0.2); color: white; border: none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></button>
+                    <button class="btn" style="border-radius: 50%; width: 45px; height: 45px; padding: 0; background: rgba(255,255,255,0.2); color: white; border: none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg></button>
+                    <button id="btnFinalizarLlamada" class="btn" style="border-radius: 50%; width: 45px; height: 45px; padding: 0; background: var(--error); color: white; border: none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path><line x1="23" y1="1" x2="1" y2="23"></line></svg></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Chat Triaje -->
+    <div id="modalChat" class="modal-overlay hidden" style="z-index: 1000;">
+        <div class="modal-container" style="max-width: 500px; display: flex; flex-direction: column; height: 600px; padding: 0; overflow: hidden; background: #f5f7fb;">
+            <div class="modal-header" style="background: #ffffff; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); margin: 0; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Chat de Triaje</h3>
+                    <p style="margin: 0.1rem 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Consulta médica privada</p>
+                </div>
+                <button class="close-btn" id="btnCerrarChat">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <!-- Mensajes dinámicos -->
+            </div>
+            <div style="padding: 1rem; background: white; border-top: 1px solid var(--border);">
+                <form id="formChat" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="hidden" id="chatTurnoId">
+                    <input type="text" id="chatInput" placeholder="Escribe un mensaje..." style="flex: 1; border: none; background: #f1f5f9; border-radius: 2rem; padding: 0.75rem 1.25rem; font-size: 0.95rem; outline: none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);" autocomplete="off" required>
+                    <button type="submit" class="btn btn-primary" style="padding: 0; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--primary);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: -2px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Alerta Emergencia -->
+    <div id="modalAlerta" class="modal-overlay hidden">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Solicitar Atención Urgente</h3>
+                <button class="close-btn" id="btnCerrarAlerta">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <form id="formAlerta" class="modal-form">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Motivo de la Emergencia *</label>
+                    <textarea id="alertaMotivo" class="input-wrapper" rows="3" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;" required placeholder="Describe brevemente tus síntomas..."></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label>Nivel de Urgencia *</label>
+                    <select id="alertaNivel" class="input-wrapper" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.5rem;" required>
+                        <option value="baja">Baja - Puede esperar un poco</option>
+                        <option value="media" selected>Media - Necesito atención pronta</option>
+                        <option value="alta">Alta - Riesgo vital o dolor agudo</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="btnCancelarAlerta">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnEnviarAlerta" style="background: var(--error); border-color: var(--error);">Enviar Alerta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Botón Flotante Recepción (Soporte Técnico / Recepción) -->
+    <div id="receptionFloatingWidget" style="position: fixed; bottom: 2rem; right: 2rem; z-index: 9999; font-family: 'Inter', sans-serif;">
+        <!-- Botón principal -->
+        <button id="btnFloatingReception" style="display: flex; align-items: center; gap: 0.75rem; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; padding: 0.85rem 1.5rem; border-radius: 999px; font-weight: 600; font-size: 0.95rem; cursor: pointer; box-shadow: 0 10px 25px -5px rgba(29, 78, 216, 0.4), 0 8px 16px -6px rgba(29, 78, 216, 0.2); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); outline: none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            Recepción
+        </button>
+
+        <!-- Contenedor del panel de recepción -->
+        <div id="receptionPanel" class="hidden" style="position: absolute; bottom: 4.5rem; right: 0; width: 380px; height: 500px; background: white; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.15); display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: auto;">
+            <!-- Cabecera -->
+            <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); flex-shrink: 0;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em;">Soporte de Recepción</h3>
+                    <p style="margin: 0.15rem 0 0 0; font-size: 0.75rem; color: rgba(255,255,255,0.9); font-weight: 500;">Canal de comunicación Paciente ↔ Recepción</p>
+                </div>
+                <button id="btnMinimizeReception" style="background: transparent; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0.25rem; outline: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <!-- Contenido del Chat -->
+            <div id="receptionPanelContent" style="flex: 1; overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; background: #f8fafc;">
+                
+                <!-- Aviso cuando no hay cita activa -->
+                <div id="receptionNoAppointmentView" class="hidden" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 1rem; flex: 1; padding: 2rem;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-main); font-weight: 700;">Sin Cita Programada</h4>
+                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">Debes tener una cita programada activa para iniciar una conversación de soporte con la Recepción.</p>
+                </div>
+
+                <!-- Chat Activo -->
+                <div id="receptionChatActiveView" style="display: flex; flex-direction: column; height: 100%; flex: 1;">
+                    <div id="receptionChatMessages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 0.75rem; padding-right: 0.25rem;">
+                        <!-- Mensajes dinámicos -->
+                    </div>
+                    <form id="frmReceptionChatSend" style="display: flex; gap: 0.5rem; align-items: center; background: white; padding: 0.35rem 0.5rem; border-radius: 999px; border: 1.5px solid var(--border); flex-shrink: 0; box-sizing: border-box;">
+                        <input type="hidden" id="hdnReceptionTurnoId">
+                        <input type="text" id="txtReceptionChatMsg" placeholder="Escribe un mensaje a recepción..." style="flex: 1; border: none; padding: 0.5rem 1rem; font-size: 0.85rem; outline: none; background: transparent;" autocomplete="off" required>
+                        <button type="submit" style="background: #1d4ed8; border: none; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; outline: none;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: -1px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="/app.js"></script>
     <script src="/paciente.js"></script>

@@ -37,13 +37,18 @@ const Turno = sequelize.define('Turno', {
     allowNull: false
   },
   estado: {
-    type: DataTypes.ENUM('Reservado', 'Confirmado', 'Cancelado'),
+    type: DataTypes.ENUM('Reservado', 'Confirmado', 'Cancelado', 'Atendido'),
     allowNull: false,
     defaultValue: 'Reservado'
   },
   fecha_reserva: {
     type: DataTypes.DATEONLY, // Usamos DATEONLY para la fecha específica del turno (e.g. '2023-11-20')
     allowNull: false
+  },
+  recepcionChatEstado: {
+    type: DataTypes.ENUM('Pendiente', 'Atendida'),
+    allowNull: false,
+    defaultValue: 'Atendida'
   }
 }, {
   timestamps: true,

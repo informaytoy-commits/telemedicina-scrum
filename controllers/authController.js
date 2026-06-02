@@ -44,6 +44,19 @@ const register = async (req, res) => {
     }
 
     // Crear el nuevo usuario
+    let especialidadId = null;
+    let especialidadNombre = null;
+    if (finalRol === 'medico' && especialidad) {
+      const { Especialidad } = require('../models');
+      const esp = await Especialidad.findOne({ where: { nombre: especialidad } });
+      if (esp) {
+        especialidadId = esp.id;
+        especialidadNombre = esp.nombre;
+      } else {
+        especialidadNombre = especialidad; // Fallback
+      }
+    }
+
     const newUser = await User.create({
       nombre,
       email,
@@ -53,7 +66,8 @@ const register = async (req, res) => {
       ci,
       telefono,
       foto: fotoPath,
-      especialidad: finalRol === 'medico' ? especialidad : null,
+      especialidad: especialidadNombre,
+      especialidadId: especialidadId,
       matricula_profesional: finalRol === 'medico' ? matricula_profesional : null
     });
 
@@ -87,20 +101,30 @@ const login = async (req, res) => {
   try {
     const { password } = req.body;
     const email = req.body.email ? req.body.email.trim() : '';
-    console.log(`[DEBUG LOGIN] Intento de login con correo: ${email}`);
+    console.log(`[DEBUG LOGIN] Correo recibido: "${email}"`);
 
     if (!email || !password) {
+      console.log(`[DEBUG LOGIN] Credenciales incompletas.`);
       return res.status(400).json({ error: 'Email y password son obligatorios' });
     }
 
-    // Buscar si existe el usuario
-    const user = await User.findOne({ where: { email } });
+    // Buscar si existe el usuario de forma insensible a mayúsculas/minúsculas
+    const sequelize = require('../config/database');
+    const user = await User.findOne({
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('email')),
+        email.toLowerCase()
+      )
+    });
+
     if (!user) {
-      console.log(`[DEBUG LOGIN] Usuario no encontrado para el correo: ${email}`);
+      console.log(`[DEBUG LOGIN] Usuario encontrado: NO (Correo: "${email}")`);
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    console.log(`[DEBUG LOGIN] Usuario encontrado. Rol: ${user.rol}, Estado: ${user.estado}`);
+    console.log(`[DEBUG LOGIN] Usuario encontrado: SÍ`);
+    console.log(`[DEBUG LOGIN] Rol: "${user.rol}"`);
+    console.log(`[DEBUG LOGIN] Estado: "${user.estado}"`);
 
     // Verificar si el usuario está activo
     if (user.estado !== 'activo') {
@@ -117,6 +141,7 @@ const login = async (req, res) => {
 
     // Verificar contraseña comparando hashes
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log(`[DEBUG LOGIN] Resultado de bcrypt.compare: ${isPasswordValid}`);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
@@ -138,6 +163,7 @@ const login = async (req, res) => {
         nombre: user.nombre,
         email: user.email,
         rol: user.rol,
+        foto: user.foto
       }
     });
 

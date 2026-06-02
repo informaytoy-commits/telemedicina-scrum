@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Recepcionista - Telemedicina</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        /* Modernized Styles for Reception Panel */
+        :root {
+            --shadow-premium: 0 12px 30px -10px rgba(15, 23, 42, 0.08), 0 4px 12px -5px rgba(15, 23, 42, 0.03);
+            --transition-premium: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .receptionist-profile-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 0.4rem 1rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-premium);
+        }
+
+        .receptionist-profile-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: var(--shadow-md);
+        }
+
+        .selector-card {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            padding: 2.5rem;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-premium);
+            border: 1px solid var(--border);
+            transition: var(--transition-premium);
+        }
+
+        .selector-card:hover {
+            box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.1);
+            border-color: #bfdbfe;
+        }
+
+        .medico-sidebar.card, .disponibilidad-main.card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-premium);
+            border: 1px solid var(--border);
+            transition: var(--transition-premium);
+        }
+
+        .medico-sidebar.card:hover, .disponibilidad-main.card:hover {
+            box-shadow: 0 15px 35px -10px rgba(15, 23, 42, 0.09);
+        }
+
+        .stat-mini {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: var(--transition-premium);
+        }
+
+        .stat-mini:hover {
+            background: var(--surface);
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .form-control-modern {
+            width: 100%;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 0.8rem 1rem;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            background: var(--bg-color);
+            transition: var(--transition-premium);
+            outline: none;
+        }
+
+        .form-control-modern:focus {
+            border-color: var(--primary);
+            background: var(--surface);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .btn-premium {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2), 0 2px 4px -2px rgba(59, 130, 246, 0.1);
+            transition: var(--transition-premium);
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -2px rgba(59, 130, 246, 0.3), 0 4px 8px -4px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-premium:active {
+            transform: translateY(0);
+        }
+
+        .table-premium {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: 0 0 0 1px var(--border);
+        }
+
+        .table-premium th {
+            background: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 1rem 1.25rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .table-premium td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            transition: var(--transition-premium);
+        }
+
+        .table-premium tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-premium tbody tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .btn-delete-disp {
+            transition: var(--transition-premium);
+            border: 1px solid rgba(239, 68, 68, 0.2) !important;
+            background: var(--surface);
+            color: var(--error);
+            font-weight: 600;
+        }
+
+        .btn-delete-disp:hover {
+            background: var(--error);
+            color: white !important;
+            border-color: var(--error) !important;
+            transform: translateY(-1px);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.03); opacity: 0.85; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <div class="header-content">
+            <div class="header-title">
+                <h1>Panel de Recepción</h1>
+                <p class="subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Gestión operativa de horarios médicos</p>
+            </div>
+            <div class="user-controls" style="display: flex; align-items: center; gap: 1.25rem;">
+                <div class="notifications-wrapper" style="position: relative;">
+                    <button id="btnNotificaciones" class="btn btn-secondary" style="padding: 0.5rem; position: relative; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span id="notifBadge" class="badge hidden" style="position: absolute; top: -5px; right: -5px; background: var(--error); color: white; font-size: 0.7rem; padding: 0.15rem 0.3rem; border-radius: 50%;">0</span>
+                    </button>
+                    <div id="notifDropdown" class="dropdown-menu hidden" style="position: absolute; right: 0; top: 100%; margin-top: 0.5rem; width: 320px; background: white; border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 1000; max-height: 400px; overflow-y: auto;">
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border); font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+                            Notificaciones
+                        </div>
+                        <div id="notifList" style="padding: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <!-- Notificaciones aquí -->
+                        </div>
+                    </div>
+                </div>
+                <div class="receptionist-profile-card">
+                    <div id="recepAvatarContainer" style="flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+                        <!-- JS Dynamically populates with receptionist avatar -->
+                    </div>
+                    <div style="display: flex; flex-direction: column; text-align: left; justify-content: center;">
+                        <span id="userNameDisplay" style="font-weight: 600; font-size: 0.85rem; color: var(--text-main); line-height: 1.2; white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">Cargando...</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">Recepcionista</span>
+                    </div>
+                </div>
+                <button id="btnLogout" class="btn btn-secondary btn-sm" style="padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: var(--radius-md); font-weight: 600;">Cerrar Sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-content admin-dashboard">
+        <!-- Selección de Médico (Card profesional) -->
+        <section class="admin-section selector-section" style="padding: 0; background: transparent; border: none; box-shadow: none; margin-bottom: 2rem;">
+            <div class="selector-card">
+                <div class="selector-icon" style="background: linear-gradient(135deg, var(--primary-light) 0%, #dbeafe 100%); color: var(--primary); padding: 1.25rem; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm);">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v6"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 16v6"/><path d="M22 19h-6"/></svg>
+                </div>
+                <div class="selector-content" style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: -0.01em;">Seleccionar Médico</h2>
+                    <p style="color: var(--text-muted); font-size: 0.925rem; margin: 0; line-height: 1.4;">Selecciona un médico para administrar su disponibilidad y revisar sus turnos asignados.</p>
+                    <div class="input-wrapper select-wrapper" style="max-width: 480px; margin-top: 0.5rem; position: relative; display: flex; align-items: center;">
+                        <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 1rem; color: var(--text-muted); z-index: 5;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <select id="selectMedico" class="form-control-modern custom-select" style="padding-left: 2.75rem; padding-right: 2.5rem; appearance: none; cursor: pointer;">
+                            <option value="">Buscar y seleccionar médico...</option>
+                        </select>
+                        <svg class="select-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; right: 1rem; pointer-events: none; color: var(--text-muted);"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="medicoPanel" style="display: none; margin-top: 2rem;">
+            <!-- Panel principal dividido en 2 columnas -->
+            <div class="dashboard-grid" style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-bottom: 2rem;">
+                
+                <!-- Columna Izquierda: Datos del médico -->
+                <div class="medico-sidebar card" style="padding: 2rem; height: fit-content; display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div id="medicoProfile" style="text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 0.5rem;">
+                        <!-- Llenado por JS -->
+                    </div>
+                    <div class="medico-stats" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div class="stat-mini">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="background: #eff6ff; color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                </div>
+                                <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Horarios Registrados</span>
+                            </div>
+                            <span id="countHorarios" style="font-weight: 700; color: var(--primary); font-size: 1.25rem;">0</span>
+                        </div>
+                        <div class="stat-mini">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="background: #ecfdf5; color: var(--success); padding: 0.5rem; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                </div>
+                                <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Turnos Programados</span>
+                            </div>
+                            <span id="countTurnos" style="font-weight: 700; color: var(--success); font-size: 1.25rem;">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Asignar Disponibilidad -->
+                <div class="disponibilidad-main card" style="padding: 2.25rem; display: flex; flex-direction: column;">
+                    <div class="section-header" style="margin-bottom: 1.75rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                        <h3 style="font-size: 1.3rem; font-weight: 700; color: var(--text-main); margin: 0 0 0.25rem 0; letter-spacing: -0.01em;">Asignar Disponibilidad</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Configura nuevos rangos horarios para la atención de pacientes.</p>
+                    </div>
+                    
+                    <form id="formDisponibilidad" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; align-items: end;">
+                        <div class="input-group" style="grid-column: span 2;">
+                            <label for="dispDia" style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem; display: block; text-transform: uppercase; letter-spacing: 0.03em;">Día de la semana</label>
+                            <div class="select-wrapper" style="position: relative; display: flex; align-items: center;">
+                                <select id="dispDia" required class="form-control-modern custom-select" style="padding-right: 2.5rem; appearance: none; cursor: pointer;">
+                                    <option value="">Seleccionar día...</option>
+                                    <option value="Lunes">Lunes</option><option value="Martes">Martes</option>
+                                    <option value="Miércoles">Miércoles</option><option value="Jueves">Jueves</option>
+                                    <option value="Viernes">Viernes</option><option value="Sábado">Sábado</option>
+                                    <option value="Domingo">Domingo</option>
+                                </select>
+                                <svg class="select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; right: 1rem; pointer-events: none; color: var(--text-muted);"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="dispHoraInicio" style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem; display: block; text-transform: uppercase; letter-spacing: 0.03em;">Hora Inicio</label>
+                            <input type="time" id="dispHoraInicio" required class="form-control-modern">
+                        </div>
+                        <div class="input-group">
+                            <label for="dispHoraFin" style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem; display: block; text-transform: uppercase; letter-spacing: 0.03em;">Hora Fin</label>
+                            <input type="time" id="dispHoraFin" required class="form-control-modern">
+                        </div>
+                        <div style="grid-column: span 2; margin-top: 0.75rem;">
+                            <button type="submit" class="btn btn-premium" style="width: 100%; padding: 0.9rem; font-size: 0.95rem; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 0.5rem; border-radius: var(--radius-md);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Guardar Horario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabla de Disponibilidad -->
+            <section class="admin-section" style="margin-bottom: 2rem; padding: 2.25rem; background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-premium); border: 1px solid var(--border);">
+                <div class="search-header" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                    <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--text-main); margin: 0 0 0.25rem 0; letter-spacing: -0.01em;">Disponibilidad Asignada</h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Lista de horarios registrados para este médico.</p>
+                </div>
+                
+                <div id="disponibilidadLoading" class="state-container hidden">
+                    <span class="spinner"></span><p>Cargando horarios...</p>
+                </div>
+                
+                <div id="disponibilidadEmpty" class="empty-state hidden" style="padding: 3rem 2rem; border-style: dashed; border-width: 2px;">
+                    <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: #94a3b8; margin-bottom: 1rem;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <div class="empty-title" style="font-size: 1.1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem;">Este médico aún no tiene horarios registrados</div>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Agrega disponibilidad usando el formulario superior.</p>
+                </div>
+                
+                <div class="logs-container" id="disponibilidadContainer" style="display: none;">
+                    <table class="table-premium" id="disponibilidadTable">
+                        <thead>
+                            <tr><th>Día</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Acción</th></tr>
+                        </thead>
+                        <tbody id="disponibilidadList"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECCIÓN DE TURNOS -->
+            <section class="admin-section turnos-section" style="padding: 2.25rem; background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-premium); border: 1px solid var(--border);">
+                <div class="search-header" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--text-main); margin: 0 0 0.25rem 0; letter-spacing: -0.01em;">Turnos del Médico</h2>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Visualiza y filtra históricamente las reservas programadas de los pacientes.</p>
+                    </div>
+                    <div id="countPacientesContainer" style="background: var(--primary-light); color: var(--primary); padding: 0.4rem 1rem; border-radius: 999px; font-weight: 600; font-size: 0.85rem; border: 1px solid #bfdbfe; display: none;">
+                        Pacientes encontrados: <span id="countPacientes">0</span>
+                    </div>
+                </div>
+
+                <!-- Barra de Filtros (Fecha, Día, etc) -->
+                <div class="filters-bar" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; background: var(--bg-color); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                    <div class="input-group" style="gap: 0.25rem;">
+                        <label for="filtroFecha" style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem; display: block; text-transform: uppercase; letter-spacing: 0.03em;">Filtrar por Fecha</label>
+                        <input type="date" id="filtroFecha" class="form-control-modern" style="cursor: pointer;">
+                    </div>
+                    <div class="input-group" style="gap: 0.25rem;">
+                        <label for="filtroDiaSemana" style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem; display: block; text-transform: uppercase; letter-spacing: 0.03em;">Día Calculado</label>
+                        <input type="text" id="filtroDiaSemana" class="form-control-modern" readonly style="background: #e2e8f0; cursor: not-allowed; font-weight: 600; color: var(--text-muted);">
+                    </div>
+                </div>
+                
+                <div id="turnosLoading" class="state-container hidden">
+                    <span class="spinner"></span>
+                    <p>Cargando turnos agendados...</p>
+                </div>
+                
+                <div id="turnosEmpty" class="empty-state hidden" style="padding: 3rem 2rem; border-style: dashed; border-width: 2px;">
+                    <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: #94a3b8; margin-bottom: 1rem;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <div class="empty-title" style="font-size: 1.1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem;">Agenda libre</div>
+                    <p id="turnosEmptyMsg" style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">No hay pacientes programados para este día.</p>
+                </div>
+                
+                <div class="logs-container" id="turnosTableContainer" style="display: none;">
+                    <table class="table-premium" id="turnosTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%">Hora</th>
+                                <th style="width: 25%">Paciente</th>
+                                <th style="width: 20%">Correo</th>
+                                <th style="width: 15%">Fecha</th>
+                                <th style="width: 10%">Estado</th>
+                                <th style="width: 10%">Pago</th>
+                                <th style="width: 15%">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="turnosTableBody">
+                            <!-- JS Dynamically populates with turnos rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal Chat Triaje (Recepcionista) -->
+    <div id="modalChat" class="modal-overlay hidden" style="z-index: 1000;">
+        <div class="modal-container" style="max-width: 500px; display: flex; flex-direction: column; height: 600px; padding: 0; overflow: hidden; background: #f5f7fb;">
+            <div class="modal-header" style="background: #ffffff; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); margin: 0; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Chat de Recepción</h3>
+                    <p style="margin: 0.1rem 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Orientación y Soporte al Paciente</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <button id="btnMarcarAtendido" class="btn btn-sm" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; border-radius: var(--radius-md); font-size: 0.75rem; font-weight: 600; padding: 0.4rem 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; transition: var(--transition-premium);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <span>Marcar Atendido</span>
+                    </button>
+                    <button class="close-btn" id="btnCerrarChat" style="margin: 0;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <!-- Mensajes dinámicos -->
+            </div>
+            <div style="padding: 1rem; background: white; border-top: 1px solid var(--border);">
+                <form id="formChat" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="hidden" id="chatTurnoId">
+                    <input type="hidden" id="chatTriageId">
+                    <input type="text" id="chatInput" placeholder="Escribe un mensaje..." style="flex: 1; border: none; background: #f1f5f9; border-radius: 2rem; padding: 0.75rem 1.25rem; font-size: 0.95rem; outline: none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);" autocomplete="off" required>
+                    <button type="submit" class="btn btn-primary" style="padding: 0; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--primary);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: -2px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <script src="/app.js"></script>
+    <script src="/recepcionista.js"></script>
+</body>
+</html>

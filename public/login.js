@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.disabled = true;
         
         // Capturar datos
-        const email = document.getElementById('email').value;
+        const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
 
         try {
@@ -75,6 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'paciente':
                 window.location.href = '/paciente.html';
+                break;
+            case 'recepcionista':
+                window.location.href = '/recepcionista.html';
                 break;
             default:
                 mostrarError('Rol desconocido o no asignado.');

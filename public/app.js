@@ -133,5 +133,26 @@ const AppHelper = {
         if (isConfirm) {
             modal.querySelector('#modalBtnCancel').addEventListener('click', closeModal);
         }
+    },
+
+    obtenerImagenUsuario: (user) => {
+        if (!user) return '';
+        
+        // Buscar foto en cualquier posible propiedad
+        const foto = user.foto || user.foto_perfil || user.imagen || user.avatar || user.profileImage;
+        if (!foto) return '';
+        
+        // Si ya empieza con http, usarlo directo
+        if (foto.startsWith('http://') || foto.startsWith('https://')) {
+            return foto;
+        }
+        
+        // Si empieza con /uploads, concatenarlo con el origen actual de la ventana
+        if (foto.startsWith('/uploads')) {
+            return window.location.origin + foto;
+        }
+        
+        // Si solo es el nombre del archivo, convertirlo a /uploads/nombre
+        return window.location.origin + '/uploads/' + foto;
     }
 };

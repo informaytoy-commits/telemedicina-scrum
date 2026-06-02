@@ -11,6 +11,11 @@ const disponibilidadRoutes = require('./routes/disponibilidadRoutes');
 const turnoRoutes = require('./routes/turnoRoutes');
 const medicoRoutes = require('./routes/medicoRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const especialidadRoutes = require('./routes/especialidadRoutes');
+const pacienteRoutes = require('./routes/pacienteRoutes');
+const notificacionRoutes = require('./routes/notificacionRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const alertaRoutes = require('./routes/alertaRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -25,8 +30,13 @@ app.use('/api/disponibilidad', disponibilidadRoutes);
 app.use('/api/turnos', turnoRoutes);
 app.use('/api/medicos', medicoRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/especialidades', especialidadRoutes);
+app.use('/api/paciente', pacienteRoutes);
+app.use('/api/notificaciones', notificacionRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/alertas', alertaRoutes);
 // Archivos estáticos accesibles (opcional para consumo de los médicos y admin)
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Main Route
@@ -42,8 +52,49 @@ db.sequelize.authenticate()
     // Nota: force: false asegura que NO se borren los datos ni las tablas existentes
     return db.sequelize.sync({ alter: true });
   })
-  .then(() => {
+  .then(async () => {
     console.log('✅ Tablas de la base de datos sincronizadas manualmente (Sequelize Sync).');
+    
+    // Seed de Especialidades Iniciales
+    const especialidadesIniciales = [
+      { nombre: 'Medicina General' },
+      { nombre: 'Pediatría' },
+      { nombre: 'Cardiología' },
+      { nombre: 'Ginecología' },
+      { nombre: 'Traumatología' }
+    ];
+
+    for (const esp of especialidadesIniciales) {
+      await db.Especialidad.findOrCreate({
+        where: { nombre: esp.nombre },
+        defaults: { estado: true }
+      });
+    }
+    console.log('✅ Especialidades iniciales verificadas.');
+
+    // Seed automático del Administrador Principal si no existe
+    const adminExists = await db.User.findOne({ where: { rol: 'admin' } });
+    if (!adminExists) {
+      console.log('🌱 No se encontró el usuario admin en la base de datos. Creándolo automáticamente...');
+      const bcrypt = require('bcrypt');
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@telemedicina.com';
+      const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      
+      await db.User.create({
+        nombre: 'Admin Sistema',
+        email: adminEmail,
+        password: hashedPassword,
+        rol: 'admin',
+        estado: 'activo',
+        ci: '00000000',
+        telefono: '00000000'
+      });
+      console.log(`✅ Administrador principal creado exitosamente (${adminEmail}).`);
+    } else {
+      console.log('✅ Administrador principal existente verificado.');
+    }
+
     app.listen(PORT, () => {
       console.log(`🚀 Servidor de telemedicina corriendo en el puerto ${PORT}`);
     });

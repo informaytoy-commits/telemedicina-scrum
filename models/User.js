@@ -47,6 +47,14 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  especialidadId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'especialidades', // the table name
+      key: 'id'
+    }
+  },
   matricula_profesional: {
     type: DataTypes.STRING,
     allowNull: true

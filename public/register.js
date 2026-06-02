@@ -13,6 +13,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitButton = document.getElementById('submitButton');
     const rolSelect = document.getElementById('rol');
     const medicoFields = document.getElementById('medicoFields');
+    const especialidadSelect = document.getElementById('especialidad');
+
+    // Cargar especialidades al iniciar
+    const cargarEspecialidades = async () => {
+        try {
+            const response = await fetch('/api/especialidades');
+            if (response.ok) {
+                const especialidades = await response.json();
+                especialidadSelect.innerHTML = '<option value="" disabled selected>Seleccione una especialidad</option>';
+                especialidades.forEach(esp => {
+                    const option = document.createElement('option');
+                    // Usamos el nombre como value para mantener compatibilidad, el backend buscará el ID
+                    option.value = esp.nombre; 
+                    option.textContent = esp.nombre;
+                    especialidadSelect.appendChild(option);
+                });
+            } else {
+                especialidadSelect.innerHTML = '<option value="" disabled selected>Error al cargar especialidades</option>';
+            }
+        } catch (error) {
+            console.error('Error fetching especialidades:', error);
+            especialidadSelect.innerHTML = '<option value="" disabled selected>Error de conexión</option>';
+        }
+    };
+
+    cargarEspecialidades();
 
     // UI Dinámica para médicos
     rolSelect.addEventListener('change', (e) => {
@@ -93,16 +119,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 // Notificar éxito mediante la función global Toast
-                if(window.AppHelper && typeof AppHelper.showToast === 'function') {
-                    AppHelper.showToast('¡Cuenta creada exitosamente! Redirigiendo...', 'success');
+                const rolRegistrado = rolSelect.value;
+                if(typeof AppHelper !== 'undefined' && typeof AppHelper.showToast === 'function') {
+                    if (rolRegistrado === 'medico') {
+                        AppHelper.showToast('Tu registro médico fue enviado correctamente. Debes esperar la validación del administrador para poder ingresar.', 'success');
+                    } else {
+                        AppHelper.showToast('Registro exitoso. Ya puedes iniciar sesión en la plataforma.', 'success');
+                    }
+                } else {
+                    alert(rolRegistrado === 'medico' ? 'Tu registro médico fue enviado correctamente. Debes esperar la validación del administrador para poder ingresar.' : 'Registro exitoso. Ya puedes iniciar sesión en la plataforma.');
                 }
 
-                registerForm.reset();
-
                 // Redirigir suave al login después de la confirmación
+                const timeoutDelay = rolRegistrado === 'medico' ? 3000 : 2000;
                 setTimeout(() => {
                     window.location.href = '/login.html';
-                }, 2000);
+                }, timeoutDelay);
 
             } else {
                 // Mostrar error proporcionado por el backend
