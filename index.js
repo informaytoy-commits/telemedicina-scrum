@@ -16,6 +16,7 @@ const pacienteRoutes = require('./routes/pacienteRoutes');
 const notificacionRoutes = require('./routes/notificacionRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const alertaRoutes = require('./routes/alertaRoutes');
+const { cancelarTurnosVencidos } = require('./utils/autoCancel');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -95,8 +96,14 @@ db.sequelize.authenticate()
       console.log(`✅ Administrador principal existente verificado (${adminEmail}).`);
     }
 
-    app.listen(PORT, () => {
+    app.listen(PORT, async () => {
       console.log(`🚀 Servidor de telemedicina corriendo en el puerto ${PORT}`);
+      // Ejecutar auto-cancelación al iniciar
+      await cancelarTurnosVencidos();
+      // Configurar intervalo para ejecutarse cada 1 minuto
+      setInterval(async () => {
+        await cancelarTurnosVencidos();
+      }, 60000);
     });
   })
   .catch((error) => {

@@ -1,7 +1,9 @@
 const { Turno, NotaClinica, Receta, User } = require('../models');
+const { cancelarTurnosVencidos } = require('../utils/autoCancel');
 
 const getHistorial = async (req, res) => {
   try {
+    await cancelarTurnosVencidos();
     const pacienteId = req.user.id;
     
     // Obtener turnos

@@ -31,6 +31,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return dias[date.getDay()];
     }
 
+    const registrarInicioConsulta = async (turnoId) => {
+        try {
+            await fetch(`/api/turnos/iniciar-consulta/${turnoId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+        } catch (error) {
+            console.error('Error al registrar inicio de consulta:', error);
+        }
+    };
+
     const filtrarYRenderizarTurnos = () => {
         if (!filtroFecha) return;
         const fechaSeleccionada = filtroFecha.value;
@@ -358,12 +371,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pacienteId = e.target.dataset.pacienteId;
                 const pacienteNombre = e.target.dataset.pacienteNombre;
                 const turnoId = e.target.dataset.turnoId;
+                registrarInicioConsulta(turnoId);
                 abrirPanelClinico(pacienteId, pacienteNombre, turnoId);
             } else if (e.target.classList.contains('btn-sala')) {
                 const id = e.target.dataset.id;
                 const paciente = e.target.dataset.paciente;
                 const fecha = e.target.dataset.fecha;
                 const hora = e.target.dataset.hora;
+                registrarInicioConsulta(id);
                 
                 document.getElementById('salaInfo').textContent = `Con ${paciente} | ${fecha} a las ${hora}`;
                 document.getElementById('modalSalaVirtual').classList.remove('hidden');

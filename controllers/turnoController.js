@@ -1,5 +1,6 @@
 const { Turno, Disponibilidad, User, AuditLog, Notificacion, NotaClinica, Receta, Pago } = require('../models');
 const { Op } = require('sequelize');
+const { cancelarTurnosVencidos } = require('../utils/autoCancel');
 
 // Función auxiliar para obtener el nombre del día a partir de una fecha ISO string, adaptado a los ENUM
 const obtenerDiaSemana = (fechaStr) => {
@@ -135,6 +136,7 @@ exports.reservarTurno = async (req, res) => {
 
 exports.listarMisTurnosPaciente = async (req, res) => {
   try {
+    await cancelarTurnosVencidos();
     const pacienteId = req.user.id;
     const turnos = await Turno.findAll({
       where: { pacienteId },
@@ -158,6 +160,7 @@ exports.listarMisTurnosPaciente = async (req, res) => {
 
 exports.listarTurnosMedico = async (req, res) => {
   try {
+    await cancelarTurnosVencidos();
     const medicoId = req.user.id;
     const turnos = await Turno.findAll({
       where: { medicoId },
@@ -178,6 +181,7 @@ exports.listarTurnosMedico = async (req, res) => {
 
 exports.listarTurnosPorMedico = async (req, res) => {
   try {
+    await cancelarTurnosVencidos();
     const { medicoId } = req.params;
     const turnos = await Turno.findAll({
       where: { medicoId },
@@ -286,6 +290,10 @@ exports.atenderTurno = async (req, res) => {
     }
 
     turno.estado = 'Atendido';
+    turno.consulta_iniciada = true;
+    if (!turno.fecha_inicio_consulta) {
+      turno.fecha_inicio_consulta = new Date();
+    }
     await turno.save();
 
     res.status(200).json({
@@ -483,5 +491,35 @@ exports.solicitarTriaje = async (req, res) => {
   } catch (error) {
     console.error('Error al solicitar triaje:', error);
     res.status(500).json({ error: 'Error del servidor al procesar la solicitud de triaje.' });
+  }
+};
+
+exports.iniciarConsulta = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const medicoId = req.user.id;
+
+    const turno = await Turno.findByPk(id);
+    if (!turno) {
+      return res.status(404).json({ error: 'Turno no encontrado.' });
+    }
+
+    if (turno.medicoId !== medicoId) {
+      return res.status(403).json({ error: 'No autorizado para iniciar la consulta de este turno.' });
+    }
+
+    if (!turno.consulta_iniciada) {
+      turno.consulta_iniciada = true;
+      turno.fecha_inicio_consulta = new Date();
+      await turno.save();
+    }
+
+    res.status(200).json({
+      mensaje: 'Consulta iniciada exitosamente',
+      turno
+    });
+  } catch (error) {
+    console.error('Error al iniciar consulta:', error);
+    res.status(500).json({ error: 'Error del servidor al iniciar la consulta.' });
   }
 };

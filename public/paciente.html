@@ -92,6 +92,18 @@
                 <p>Gestiona los turnos que has reservado con nuestros médicos.</p>
             </div>
             
+            <!-- Barra de Filtros (Fecha, Día, etc) -->
+            <div class="filters-bar" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; background: var(--bg-color); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                <div class="input-group" style="gap: 0.25rem;">
+                    <label for="filtroFecha" style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem; display: block; text-transform: uppercase; letter-spacing: 0.03em;">Filtrar por Fecha</label>
+                    <input type="date" id="filtroFecha" class="form-control-modern" style="cursor: pointer;">
+                </div>
+                <div class="input-group" style="gap: 0.25rem;">
+                    <label for="filtroDiaSemana" style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.25rem; display: block; text-transform: uppercase; letter-spacing: 0.03em;">Día Calculado</label>
+                    <input type="text" id="filtroDiaSemana" class="form-control-modern" readonly style="background: #e2e8f0; cursor: not-allowed; font-weight: 600; color: var(--text-muted);">
+                </div>
+            </div>
+            
             <div id="misTurnosLoading" class="state-container hidden">
                 <span class="spinner"></span>
                 <p>Cargando tus turnos...</p>
@@ -100,7 +112,7 @@
             <div id="misTurnosEmpty" class="empty-state hidden" style="padding: 2rem;">
                 <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 <div class="empty-title">Tu agenda está libre</div>
-                <p style="margin: 0; font-size: 0.9rem">No tienes turnos programados.</p>
+                <p style="margin: 0; font-size: 0.9rem">No tienes turnos programados para esta fecha.</p>
             </div>
             
             <div id="misTurnosList" class="medicos-grid hidden">

@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const specialtySelect = document.getElementById('specialtySelect');
     const searchButton = document.getElementById('searchButton');
+    const filtroFecha = document.getElementById('filtroFecha');
+    const filtroDiaSemana = document.getElementById('filtroDiaSemana');
 
     // Contenedores de estados
     const loadingState = document.getElementById('loadingState');
@@ -18,6 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorText = document.getElementById('errorText');
     const emptyState = document.getElementById('emptyState');
     const medicosList = document.getElementById('medicosList');
+
+    let listaTurnosActuales = [];
+
+    if (filtroFecha) {
+        filtroFecha.addEventListener('change', () => {
+            filtrarYRenderizarTurnos();
+        });
+    }
 
     const buscarMedicos = async (nombreQuery = '', especialidadQuery = '') => {
         // Mostrar estado de carga
@@ -542,6 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
         misTurnosEmpty.classList.add('hidden');
         misTurnosList.classList.add('hidden');
         misTurnosList.innerHTML = '';
+        listaTurnosActuales = [];
 
         try {
             const response = await fetch('/api/turnos/mis-turnos', {
@@ -554,191 +565,224 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!response.ok) throw new Error(data.error || 'Error al obtener tus turnos');
             
-            const turnos = data.turnos || [];
+            listaTurnosActuales = data.turnos || [];
             misTurnosLoading.classList.add('hidden');
             
-            if (turnos.length === 0) {
-                misTurnosEmpty.classList.remove('hidden');
-                return;
+            // Autocompletar la fecha de hoy local en formato YYYY-MM-DD
+            if (filtroFecha && !filtroFecha.value) {
+                const now = new Date();
+                const offset = now.getTimezoneOffset() * 60000;
+                const localISO = (new Date(now - offset)).toISOString().slice(0, 10);
+                filtroFecha.value = localISO;
             }
-            
-            turnos.sort((a, b) => {
-                const getPriority = t => ['reservado', 'activo', 'confirmado'].includes(t.estado.toLowerCase()) ? 0 : 1;
-                const getEstadoPriority = (estado) => {
-                    const e = estado.toLowerCase();
-                    if (e === 'reservado' || e === 'confirmado' || e === 'activo') return 1;
-                    if (e === 'atendido' || e === 'realizado') return 2;
-                    if (e === 'cancelado') return 3;
-                    return 2;
-                };
-                const pA = getEstadoPriority(a.estado);
-                const pB = getEstadoPriority(b.estado);
-                if (pA !== pB) return pA - pB;
-                // Si tienen la misma prioridad, ordenar por fecha descendente (más reciente primero)
-                return new Date(b.fecha_reserva + 'T' + b.hora_inicio) - new Date(a.fecha_reserva + 'T' + a.hora_inicio);
-            });
 
-            turnos.forEach(turno => {
-                const medicoLocalName = turno.medico ? turno.medico.nombre : 'Médico Desconocido';
-                const initialString = medicoLocalName.charAt(0).toUpperCase();
-                const photoPath = AppHelper.obtenerImagenUsuario(turno.medico);
-                const avatarLocalHTML = photoPath 
-                    ? `<img src="${photoPath}" alt="" onerror="this.onerror=null; this.parentElement.innerHTML='${initialString}';">` 
-                    : initialString;
-                
-                const esCancelado = turno.estado.toLowerCase() === 'cancelado';
-                const opacity = esCancelado ? '0.6' : '1';
-                const textDecoration = esCancelado ? 'line-through' : 'none';
+            filtrarYRenderizarTurnos();
 
-                const especialidad = (turno.medico && turno.medico.especialidad) ? turno.medico.especialidad : 'Especialidad no definida';
-
-                const card = document.createElement('div');
-                card.className = 'medico-card';
-                card.id = `turno-card-${turno.id}`; // Para redirigir luego
-                card.style.opacity = opacity;
-                if (esCancelado) {
-                    card.style.background = 'var(--bg-color)';
-                }
-                
-                card.innerHTML = `
-                    <div class="medico-header">
-                        <div class="medico-avatar" style="${esCancelado ? 'filter: grayscale(1);' : ''}">${avatarLocalHTML}</div>
-                        <div class="medico-info">
-                            <h3 style="text-decoration: ${textDecoration}">Dr/a. ${medicoLocalName}</h3>
-                            <p style="text-decoration: ${textDecoration}; font-size: 0.8rem; color: var(--primary); margin: 0;">${especialidad}</p>
-                            <p style="text-decoration: ${textDecoration}; margin-top: 0.25rem;">${turno.fecha_reserva}</p>
-                        </div>
-                    </div>
-                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem; margin-top: 0.5rem; text-decoration: ${textDecoration}">
-                        Horario: <strong style="color: var(--text-main); font-weight: 600">${turno.hora_inicio.slice(0,5)} - ${turno.hora_fin.slice(0,5)}</strong>
-                    </p>
-                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
-                        <span class="badge badge-${turno.estado.toLowerCase()}" style="margin-right: auto;">${turno.estado.toUpperCase()}</span>
-                        ${!esCancelado ? ((turno.pago && turno.pago.estado === 'pagado') ? `<span class="badge badge-confirmado" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">PAGADO</span>` : `<span class="badge badge-pendiente" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">PAGO PENDIENTE</span>`) : ''}
-                        ${(!esCancelado && turno.estado.toLowerCase() === 'reservado') ? `<button class="btn btn-primary btn-sm btn-sala" data-id="${turno.id}" data-medico="${medicoLocalName}" data-fecha="${turno.fecha_reserva}" data-hora="${turno.hora_inicio.slice(0,5)}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Sala Virtual</button>` : ''}
-                        ${(!esCancelado && ['reservado', 'activo'].includes(turno.estado.toLowerCase())) ? `<button class="btn btn-secondary btn-sm btn-chat" data-id="${turno.id}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Triaje</button>` : ''}
-                        ${(!esCancelado && turno.notaClinica) ? `<button class="btn btn-secondary btn-sm btn-ver-nota" data-nota='${JSON.stringify(turno.notaClinica).replace(/'/g, "&apos;")}' style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Ver Nota</button>` : ''}
-                        ${(!esCancelado && turno.receta) ? `<button class="btn btn-secondary btn-sm btn-ver-receta" data-receta='${JSON.stringify(turno.receta).replace(/'/g, "&apos;")}' style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Ver Receta</button>` : ''}
-                        ${!esCancelado ? `
-                        <button class="btn btn-secondary btn-cancelar" data-id="${turno.id}" style="padding: 0.25rem 0.5rem; color: var(--error); border-color: rgba(222, 53, 11, 0.4); font-size: 0.75rem;">
-                            Cancelar
-                        </button>` : ''}
-                    </div>
-                `;
-                misTurnosList.appendChild(card);
-            });
-            
-            misTurnosList.classList.remove('hidden');
-
-            document.querySelectorAll('.btn-cancelar').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const turnoId = e.target.getAttribute('data-id');
-                    AppHelper.showConfirm("Cancelar Turno", "¿Estás seguro de que deseas cancelar este turno? Esta acción no se puede deshacer.", () => {
-                        cancelarTurno(turnoId, e.target);
-                    });
-                });
-            });
-
-            // Handlers for Nota and Receta modals
-            const modalDetalleClinico = document.getElementById('modalDetalleClinico');
-            const detalleClinicoTitle = document.getElementById('detalleClinicoTitle');
-            const detalleClinicoContent = document.getElementById('detalleClinicoContent');
-            const btnCerrarDetalle = document.getElementById('btnCerrarDetalle');
-            const btnAceptarDetalle = document.getElementById('btnAceptarDetalle');
-
-            const closeModal = () => modalDetalleClinico.classList.add('hidden');
-            if (btnCerrarDetalle) btnCerrarDetalle.addEventListener('click', closeModal);
-            if (btnAceptarDetalle) btnAceptarDetalle.addEventListener('click', closeModal);
-
-            document.querySelectorAll('.btn-ver-nota').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const notaStr = e.target.getAttribute('data-nota');
-                    if (notaStr) {
-                        try {
-                            const nota = JSON.parse(notaStr);
-                            detalleClinicoTitle.textContent = 'Detalle de Nota Clínica';
-                            detalleClinicoContent.innerHTML = `
-                                <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
-                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-                                        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.25rem; font-weight: 600;">Fecha de Emisión</div>
-                                        <div style="font-size: 0.95rem; color: #0f172a; font-weight: 500;">${new Date(nota.fecha).toLocaleString()}</div>
-                                    </div>
-                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-                                        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;">Diagnóstico</div>
-                                        <div style="font-size: 0.95rem; color: #334155; line-height: 1.5;">${nota.diagnostico}</div>
-                                    </div>
-                                    ${nota.observaciones ? `
-                                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-                                            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;">Observaciones</div>
-                                            <div style="font-size: 0.95rem; color: #334155; line-height: 1.5;">${nota.observaciones}</div>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            `;
-                            modalDetalleClinico.classList.remove('hidden');
-                        } catch(ex) {}
-                    }
-                });
-            });
-
-            document.querySelectorAll('.btn-ver-receta').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const recetaStr = e.target.getAttribute('data-receta');
-                    if (recetaStr) {
-                        try {
-                            const receta = JSON.parse(recetaStr);
-                            detalleClinicoTitle.textContent = 'Detalle de Receta Médica';
-                            detalleClinicoContent.innerHTML = `
-                                <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
-                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-                                        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.25rem; font-weight: 600;">Fecha de Emisión</div>
-                                        <div style="font-size: 0.95rem; color: #0f172a; font-weight: 500;">${new Date(receta.fecha).toLocaleString()}</div>
-                                    </div>
-                                    ${receta.descripcion ? `
-                                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-                                            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;">Motivo</div>
-                                            <div style="font-size: 0.95rem; color: #334155; line-height: 1.5;">${receta.descripcion}</div>
-                                        </div>
-                                    ` : ''}
-                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-                                        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;">Indicaciones / Medicamentos</div>
-                                        <div style="font-size: 0.95rem; color: #334155; line-height: 1.5; white-space: pre-line;">${receta.medicamentos}</div>
-                                    </div>
-                                </div>
-                            `;
-                            modalDetalleClinico.classList.remove('hidden');
-                        } catch(ex) {}
-                    }
-                });
-            });
-
-            // Handlers for Sala Virtual and Chat
-            document.querySelectorAll('.btn-sala').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = e.currentTarget.dataset.id;
-                    const medico = e.currentTarget.dataset.medico;
-                    const fecha = e.currentTarget.dataset.fecha;
-                    const hora = e.currentTarget.dataset.hora;
-                    
-                    document.getElementById('salaInfo').textContent = `Con Dr/a. ${medico} | ${fecha} a las ${hora}`;
-                    document.getElementById('modalSalaVirtual').classList.remove('hidden');
-
-                    // Almacenamos el ID en el botón de finalizar
-                    document.getElementById('btnFinalizarLlamada').dataset.id = id;
-                });
-            });
-
-            document.querySelectorAll('.btn-chat').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const turnoId = e.currentTarget.dataset.id;
-                    abrirModalChat(turnoId);
-                });
-            });
         } catch (error) {
             misTurnosLoading.classList.add('hidden');
             AppHelper.showToast(error.message, 'error');
         }
     };
+
+    const filtrarYRenderizarTurnos = () => {
+        if (!filtroFecha) return;
+        const fechaSeleccionada = filtroFecha.value;
+
+        // 1. Calcular y mostrar día de la semana
+        const diaCalculado = obtenerDiaSemana(fechaSeleccionada);
+        if (filtroDiaSemana) {
+            filtroDiaSemana.value = diaCalculado || 'No calculado';
+        }
+
+        // 2. Filtrar turnos del paciente para esa fecha (incluidos cancelados)
+        const turnosFiltrados = listaTurnosActuales.filter(t => t.fecha_reserva === fechaSeleccionada);
+
+        // 3. Renderizar grilla
+        misTurnosList.innerHTML = '';
+
+        if (turnosFiltrados.length === 0) {
+            misTurnosEmpty.classList.remove('hidden');
+            misTurnosList.classList.add('hidden');
+            return;
+        }
+
+        misTurnosEmpty.classList.add('hidden');
+        misTurnosList.classList.remove('hidden');
+
+        // Ordenar por prioridad de estado y luego por hora de inicio
+        turnosFiltrados.sort((a, b) => {
+            const getEstadoPriority = (estado) => {
+                const e = estado.toLowerCase();
+                if (e === 'reservado' || e === 'confirmado' || e === 'activo') return 1;
+                if (e === 'atendido' || e === 'realizado') return 2;
+                if (e === 'cancelado') return 3;
+                return 2;
+            };
+            const pA = getEstadoPriority(a.estado);
+            const pB = getEstadoPriority(b.estado);
+            if (pA !== pB) return pA - pB;
+            // Si tienen la misma prioridad, ordenar por hora de inicio ascendente (más temprano primero)
+            return a.hora_inicio.localeCompare(b.hora_inicio);
+        });
+
+        turnosFiltrados.forEach(turno => {
+            const medicoLocalName = turno.medico ? turno.medico.nombre : 'Médico Desconocido';
+            const initialString = medicoLocalName.charAt(0).toUpperCase();
+            const photoPath = AppHelper.obtenerImagenUsuario(turno.medico);
+            const avatarLocalHTML = photoPath 
+                ? `<img src="${photoPath}" alt="" onerror="this.onerror=null; this.parentElement.innerHTML='${initialString}';">` 
+                : initialString;
+            
+            const esCancelado = turno.estado.toLowerCase() === 'cancelado';
+            const opacity = esCancelado ? '0.6' : '1';
+            const textDecoration = esCancelado ? 'line-through' : 'none';
+
+            const especialidad = (turno.medico && turno.medico.especialidad) ? turno.medico.especialidad : 'Especialidad no definida';
+
+            const card = document.createElement('div');
+            card.className = 'medico-card';
+            card.id = `turno-card-${turno.id}`;
+            card.style.opacity = opacity;
+            if (esCancelado) {
+                card.style.background = 'var(--bg-color)';
+            }
+            
+            card.innerHTML = `
+                <div class="medico-header">
+                    <div class="medico-avatar" style="${esCancelado ? 'filter: grayscale(1);' : ''}">${avatarLocalHTML}</div>
+                    <div class="medico-info">
+                        <h3 style="text-decoration: ${textDecoration}">Dr/a. ${medicoLocalName}</h3>
+                        <p style="text-decoration: ${textDecoration}; font-size: 0.8rem; color: var(--primary); margin: 0;">${especialidad}</p>
+                        <p style="text-decoration: ${textDecoration}; margin-top: 0.25rem;">${turno.fecha_reserva}</p>
+                    </div>
+                </div>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem; margin-top: 0.5rem; text-decoration: ${textDecoration}">
+                    Horario: <strong style="color: var(--text-main); font-weight: 600">${turno.hora_inicio.slice(0,5)} - ${turno.hora_fin.slice(0,5)}</strong>
+                </p>
+                <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                    <span class="badge badge-${turno.estado.toLowerCase()}" style="margin-right: auto;">${turno.estado.toUpperCase()}</span>
+                    ${!esCancelado ? ((turno.pago && turno.pago.estado === 'pagado') ? `<span class="badge badge-confirmado" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">PAGADO</span>` : `<span class="badge badge-pendiente" style="font-size: 0.7rem; padding: 0.2rem 0.4rem;">PAGO PENDIENTE</span>`) : ''}
+                    ${(!esCancelado && turno.estado.toLowerCase() === 'reservado') ? `<button class="btn btn-primary btn-sm btn-sala" data-id="${turno.id}" data-medico="${medicoLocalName}" data-fecha="${turno.fecha_reserva}" data-hora="${turno.hora_inicio.slice(0,5)}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Sala Virtual</button>` : ''}
+                    ${(!esCancelado && ['reservado', 'activo'].includes(turno.estado.toLowerCase())) ? `<button class="btn btn-secondary btn-sm btn-chat" data-id="${turno.id}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Triaje</button>` : ''}
+                    ${(!esCancelado && turno.notaClinica) ? `<button class="btn btn-secondary btn-sm btn-ver-nota" data-nota='${JSON.stringify(turno.notaClinica).replace(/'/g, "&apos;")}' style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Ver Nota</button>` : ''}
+                    ${(!esCancelado && turno.receta) ? `<button class="btn btn-secondary btn-sm btn-ver-receta" data-receta='${JSON.stringify(turno.receta).replace(/'/g, "&apos;")}' style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Ver Receta</button>` : ''}
+                    ${!esCancelado ? `
+                    <button class="btn btn-secondary btn-cancelar" data-id="${turno.id}" style="padding: 0.25rem 0.5rem; color: var(--error); border-color: rgba(222, 53, 11, 0.4); font-size: 0.75rem;">
+                        Cancelar
+                    </button>` : ''}
+                </div>
+            `;
+            misTurnosList.appendChild(card);
+        });
+
+        // Event listeners de las tarjetas
+        document.querySelectorAll('.btn-cancelar').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const turnoId = e.target.getAttribute('data-id');
+                AppHelper.showConfirm("Cancelar Turno", "¿Estás seguro de que deseas cancelar este turno? Esta acción no se puede deshacer.", () => {
+                    cancelarTurno(turnoId, e.target);
+                });
+            });
+        });
+
+        document.querySelectorAll('.btn-ver-nota').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const notaStr = e.target.getAttribute('data-nota');
+                if (notaStr) {
+                    try {
+                        const nota = JSON.parse(notaStr);
+                        const modalDetalleClinico = document.getElementById('modalDetalleClinico');
+                        const detalleClinicoTitle = document.getElementById('detalleClinicoTitle');
+                        const detalleClinicoContent = document.getElementById('detalleClinicoContent');
+                        detalleClinicoTitle.textContent = 'Detalle de Nota Clínica';
+                        detalleClinicoContent.innerHTML = `
+                            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
+                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.25rem; font-weight: 600;">Fecha de Emisión</div>
+                                    <div style="font-size: 0.95rem; color: #0f172a; font-weight: 500;">${new Date(nota.fecha).toLocaleString()}</div>
+                                </div>
+                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;">Diagnóstico</div>
+                                    <div style="font-size: 0.95rem; color: #334155; line-height: 1.5;">${nota.diagnostico}</div>
+                                </div>
+                                ${nota.observaciones ? `
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                                        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;">Observaciones</div>
+                                        <div style="font-size: 0.95rem; color: #334155; line-height: 1.5;">${nota.observaciones}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                        modalDetalleClinico.classList.remove('hidden');
+                    } catch(ex) {}
+                }
+            });
+        });
+
+        document.querySelectorAll('.btn-ver-receta').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const recetaStr = e.target.getAttribute('data-receta');
+                if (recetaStr) {
+                    try {
+                        const receta = JSON.parse(recetaStr);
+                        const modalDetalleClinico = document.getElementById('modalDetalleClinico');
+                        const detalleClinicoTitle = document.getElementById('detalleClinicoTitle');
+                        const detalleClinicoContent = document.getElementById('detalleClinicoContent');
+                        detalleClinicoTitle.textContent = 'Detalle de Receta Médica';
+                        detalleClinicoContent.innerHTML = `
+                            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
+                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.25rem; font-weight: 600;">Fecha de Emisión</div>
+                                    <div style="font-size: 0.95rem; color: #0f172a; font-weight: 500;">${new Date(receta.fecha).toLocaleString()}</div>
+                                </div>
+                                ${receta.descripcion ? `
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                                        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;">Motivo</div>
+                                        <div style="font-size: 0.95rem; color: #334155; line-height: 1.5;">${receta.descripcion}</div>
+                                    </div>
+                                ` : ''}
+                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;">Indicaciones / Medicamentos</div>
+                                    <div style="font-size: 0.95rem; color: #334155; line-height: 1.5; white-space: pre-line;">${receta.medicamentos}</div>
+                                </div>
+                            </div>
+                        `;
+                        modalDetalleClinico.classList.remove('hidden');
+                    } catch(ex) {}
+                }
+            });
+        });
+
+        document.querySelectorAll('.btn-sala').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.currentTarget.dataset.id;
+                const medico = e.currentTarget.dataset.medico;
+                const fecha = e.currentTarget.dataset.fecha;
+                const hora = e.currentTarget.dataset.hora;
+                
+                document.getElementById('salaInfo').textContent = `Con Dr/a. ${medico} | ${fecha} a las ${hora}`;
+                document.getElementById('modalSalaVirtual').classList.remove('hidden');
+                document.getElementById('btnFinalizarLlamada').dataset.id = id;
+            });
+        });
+
+        document.querySelectorAll('.btn-chat').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const turnoId = e.currentTarget.dataset.id;
+                abrirModalChat(turnoId);
+            });
+        });
+    };
+
+    // Bind close details modal once
+    const modalDetalleClinico = document.getElementById('modalDetalleClinico');
+    const btnCerrarDetalle = document.getElementById('btnCerrarDetalle');
+    const btnAceptarDetalle = document.getElementById('btnAceptarDetalle');
+    if (modalDetalleClinico) {
+        const closeModal = () => modalDetalleClinico.classList.add('hidden');
+        if (btnCerrarDetalle) btnCerrarDetalle.addEventListener('click', closeModal);
+        if (btnAceptarDetalle) btnAceptarDetalle.addEventListener('click', closeModal);
+    }
 
     const cancelarTurno = async (turnoId, btnElement) => {
         btnElement.disabled = true;

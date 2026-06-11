@@ -49,6 +49,20 @@ const Turno = sequelize.define('Turno', {
     type: DataTypes.ENUM('Pendiente', 'Atendida'),
     allowNull: false,
     defaultValue: 'Atendida'
+  },
+  consulta_iniciada: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
+  fecha_inicio_consulta: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  auto_cancelado: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
   }
 }, {
   timestamps: true,

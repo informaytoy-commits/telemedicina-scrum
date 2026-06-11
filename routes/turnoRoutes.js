@@ -22,6 +22,9 @@ router.put('/cancelar/:id', verifyToken, checkRole(['paciente', 'medico']), turn
 // 5. Marcar turno como atendido (Solo Médico)
 router.put('/atender/:id', verifyToken, checkRole(['medico']), turnoController.atenderTurno);
 
+// 5.5 Iniciar consulta médica (Solo Médico)
+router.put('/iniciar-consulta/:id', verifyToken, checkRole(['medico']), turnoController.iniciarConsulta);
+
 // 6. Confirmar llegada (Solo Recepcionista)
 router.put('/confirmar-llegada/:id', verifyToken, checkRole(['recepcionista']), turnoController.confirmarLlegada);
 
