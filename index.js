@@ -73,12 +73,12 @@ db.sequelize.authenticate()
     console.log('✅ Especialidades iniciales verificadas.');
 
     // Seed automático del Administrador Principal si no existe
-    const adminExists = await db.User.findOne({ where: { rol: 'admin' } });
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@telemedicina.com';
+    const adminExists = await db.User.findOne({ where: { email: adminEmail } });
     if (!adminExists) {
-      console.log('🌱 No se encontró el usuario admin en la base de datos. Creándolo automáticamente...');
+      console.log(`🌱 No se encontró el usuario admin (${adminEmail}) en la base de datos. Creándolo automáticamente...`);
       const bcrypt = require('bcrypt');
-      const adminEmail = process.env.ADMIN_EMAIL || 'admin@telemedicina.com';
-      const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+      const adminPassword = process.env.ADMIN_PASSWORD || '123456';
       const hashedPassword = await bcrypt.hash(adminPassword, 10);
       
       await db.User.create({
@@ -92,7 +92,7 @@ db.sequelize.authenticate()
       });
       console.log(`✅ Administrador principal creado exitosamente (${adminEmail}).`);
     } else {
-      console.log('✅ Administrador principal existente verificado.');
+      console.log(`✅ Administrador principal existente verificado (${adminEmail}).`);
     }
 
     app.listen(PORT, () => {

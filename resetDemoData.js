@@ -72,7 +72,7 @@ async function runReset() {
     if (adminCount === 0) {
       console.log('🌱 No se encontró ningún administrador. Creando administrador por defecto...');
       const adminEmail = process.env.ADMIN_EMAIL || 'admin@telemedicina.com';
-      const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+      const adminPassword = process.env.ADMIN_PASSWORD || '123456';
       const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
       const newAdmin = await User.create({
